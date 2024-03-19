@@ -1,0 +1,9 @@
+# test.yaml
+DATA:
+    BATCH_SIZE: 4
+    DATASET: 'FERPlus'
+    DATA_PATH: '../../FERdatasets/FERPlus'
+
+MODEL:
+    RESUME: './checkpoint/test.pth'
+    

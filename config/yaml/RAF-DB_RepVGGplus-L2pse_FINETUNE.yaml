@@ -1,0 +1,20 @@
+SYSTEM:
+    SAVE_FREQ: 10
+    PRINT_FREQ: 30
+    EXPERIMENT_PATH: './results/RAF-DB_RepVGGplus-L2pse_FINETUNE'
+    
+DATA:
+    BATCH_SIZE: 32
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../../FERdatasets/RAF-DB'
+
+MODEL:
+    ARCH: 'RepVGGplus-L2pse'
+    NUM_CLASS: 7
+    
+MODE:
+    FLOP: True
+    
+TRAIN:
+    EPOCHS: 200
+    RESUME: './model/pretrain/RepVGGplus-L2pse.pth'

@@ -1,0 +1,17 @@
+SYSTEM:
+    SAVE_FREQ: 10
+    PRINT_FREQ: 20
+    EXPERIMENT_PATH: './results/RAF-DB_RepVGGplus-L2pse'
+    
+DATA:
+    BATCH_SIZE: 96
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../../autodl-tmp/RAF-DB'
+
+MODEL:
+    ARCH: 'RepVGGplus-L2pse'
+    NUM_CLASS: 7
+    
+TRAIN:
+    EPOCHS: 200
+    

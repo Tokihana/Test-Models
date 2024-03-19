@@ -1,0 +1,12 @@
+DATA:
+    BATCH_SIZE: 64
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../../FERdatasets/RAF-DB'
+
+MODEL:
+    ARCH: 'IResNet50'
+    NUM_CLASS: 7
+    
+MODE:
+    THROUGHPUT: True
+    

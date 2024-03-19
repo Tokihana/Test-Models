@@ -1,0 +1,22 @@
+SYSTEM:
+    SAVE_FREQ: 10
+    PRINT_FREQ: 10
+    EXPERIMENT_PATH: './results/RAF-DB_RepVGGplus-L2pse_FINETUNE'
+DATA:
+    BATCH_SIZE: 96
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../../autodl-tmp/RAF-DB'
+
+MODEL:
+    ARCH: 'RepVGGplus-L2pse'
+    NUM_CLASS: 7
+    
+MODE:
+    FINETUNE: True
+    
+TRAIN:
+    EPOCHS: 200
+    RESUME: './model/pretrain/RepVGGplus-L2pse.pth'
+    CRITERION:
+        NAME: 'SoftTargetCE'
+    
