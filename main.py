@@ -39,7 +39,7 @@ def main():
         return
     
     if config.MODE.THROUGHPUT:
-        throughput(model, val_loader, logger)
+        throughput(model, train_loader, logger)
         return
     
     # build optimier

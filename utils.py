@@ -103,9 +103,10 @@ def compute_flop_params(config, model, logger):
 def throughput(model, data_loader, logger):
     '''throughput can be used to ensure batch_size'''
     model.eval()
-
+    
+    num_batchs = len(data_loader)
     for idx, (images, _) in enumerate(data_loader):
-        images = images.cuda(non_blocking=True)
+        images = images.cuda()
 
         batch_size = images.shape[0]
         for i in range(50):
@@ -117,4 +118,5 @@ def throughput(model, data_loader, logger):
         tic2 = time.time()
         throughput = 30 * batch_size / (tic2 - tic1)
         logger.info(f"batch_size {batch_size} throughput {int(throughput)} time per step {batch_size/throughput:.2f}")
+        logger.info(f"will spend {batch_size/throughput*num_batchs:.2f}s for processing {num_batchs} batch")
         return
