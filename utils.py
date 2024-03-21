@@ -101,6 +101,7 @@ def compute_flop_params(config, model, logger):
     
 @torch.no_grad()
 def throughput(model, data_loader, logger):
+    '''throughput can be used to ensure batch_size'''
     model.eval()
 
     for idx, (images, _) in enumerate(data_loader):
@@ -115,5 +116,5 @@ def throughput(model, data_loader, logger):
             model(images)
         tic2 = time.time()
         throughput = 30 * batch_size / (tic2 - tic1)
-        logger.info(f"batch_size {batch_size} throughput {throughput}")
+        logger.info(f"batch_size {batch_size} throughput {int(throughput)} time per step {batch_size/throughput:.2f}")
         return
