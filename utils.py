@@ -98,6 +98,7 @@ def compute_flop_params(config, model, logger):
     flops, params = clever_format([flops, params], '%.3f')
     logger.info(f'number of parms: {params}\t FLOPs:{flops}')
     del img
+    return params, flops
     
 @torch.no_grad()
 def throughput(model, data_loader, logger):

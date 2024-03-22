@@ -65,11 +65,13 @@ def main():
     
     # logger flop and params
     if config.MODE.FLOP:
-        compute_flop_params(config, model, logger)
+        params, flops = compute_flop_params(config, model, logger)
+        wandb.log({'params':params, 'flops':flops})
         return
     
     if config.MODE.THROUGHPUT:
-        throughput(model, train_loader, logger)
+        through, step_time=throughput(model, train_loader, logger)
+        wandb.log({'throughput':through, 'time per stem':step_time}）
         return
     
     # build optimier
@@ -107,6 +109,7 @@ def main():
             save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         if val_loader is not None:
             acc, loss = validate(config, model, val_loader, logger)
+            wandb.log({'acc':acc, 'loss':loss})
             max_acc = max(max_acc, acc)
             logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
             if max_acc == acc: # max_acc updated
@@ -197,6 +200,7 @@ def validate(config, model, data_loader, logger):
         loss_avg.update(loss.item(), targets.size(0))
         acc_avg.update(acc.item(), targets.size(0))
         
+        
         batch_time.update(time.time() - end)
         end = time.time()
         
@@ -208,6 +212,7 @@ def validate(config, model, data_loader, logger):
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Acc {acc_avg.val:.3f} ({acc_avg.avg:.3f})\t'
                 f'Mem {memory_used:.0f}MB')
+            
     logger.info(f' * Acc {acc_avg.avg:.3f}')
     return acc_avg.avg,  loss_avg.avg
     
@@ -215,5 +220,3 @@ if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
     main()
-    
-    
