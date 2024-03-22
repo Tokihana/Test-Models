@@ -115,7 +115,8 @@ def main():
             logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
             if max_acc == acc: # max_acc updated
                 save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
-    
+                  
+    wandb.log({'max acc':max_acc})
     total_time = time.time() - start_time
     logger.info(f'Total training time: {str(datetime.timedelta(seconds=int(total_time)))}')
     
