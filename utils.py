@@ -119,4 +119,4 @@ def throughput(model, data_loader, logger):
         throughput = 30 * batch_size / (tic2 - tic1)
         logger.info(f"batch_size {batch_size} throughput {int(throughput)} time per step {batch_size/throughput:.2f}")
         logger.info(f"will spend {batch_size/throughput*num_batchs:.2f}s for processing {num_batchs} batch")
-        return
+        return int(throughput), batch_size/throughput
