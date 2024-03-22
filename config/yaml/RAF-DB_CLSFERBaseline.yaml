@@ -1,0 +1,20 @@
+# RAF-DB_CLSFERBaseline.yaml
+SYSTEM:
+    EXPERIMENT_PATH: './results/RAF-DB_CLSFERBaseline'
+    SAVE_FREQ: 30
+    
+DATA:
+    BATCH_SIZE: 4
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../FERdatasets/RAF-DB'
+    
+MODEL:
+    ARCH: 'CLSFERBaseline'
+    
+MODE:
+    THROUGHPUT: True
+    
+TRAIN:
+    EPOCHS: 10
+    
+    

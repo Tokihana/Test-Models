@@ -90,8 +90,23 @@ class NonMultiCLSBlock(nn.Module):
     
 class CLSViT(nn.Module):
     '''ViT with CLSBlock and no pyramid structure'''
-    def __init__(self):
+    def __init__(self,
+                num_classes: int = 7,
+                embed_dim: int = 512,
+                ):
         super(CLSViT, self).__init__()
-        self.block
+        self.num_classes = num_classes
+        self.embed_dim = embed_dim
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.pos_embed = nn.Parameter()
+        
     def forward(self, x):
+        x = self.forward_features(x)
+        x = self.forward_head(x)
+        return x
+    
+    def forward_features(self, x):
+        x = self.patch_embed(x) # can be a CNN backbone
+        
+    def _pos_embed(self, x):
         return
