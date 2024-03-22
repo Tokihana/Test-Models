@@ -35,7 +35,7 @@ def save_checkpoint(config, model, epoch, max_acc, optimizer, lr_scheduler, logg
     states = {
         'state_dict': model.state_dict(),
         'optimizer': optimizer.state_dict(),
-        'lr_scheduler': lr_scheduler.state_dict(),
+        'lr_scheduler': lr_scheduler.state_dict() if not lr_scheduler == None else None,
         'max_acc': max_acc,
         'epoch': epoch,
         'config': config,

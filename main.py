@@ -34,6 +34,7 @@ def main():
         config={
             # dataset
             "dataset": config.DATA.DATASET,
+            "batch size": config.DATA.BATCH_SIZE,
             # model architecture
             "architecture": config.MODEL.ARCH,
             # training settings
@@ -215,8 +216,17 @@ def validate(config, model, data_loader, logger):
             
     logger.info(f' * Acc {acc_avg.avg:.3f}')
     return acc_avg.avg,  loss_avg.avg
+                  
+def _test_lr():
+    lr_list = [0.1**i for i in range(-8, -1)]
+    for lr in lr_list:
+        config.defrost()
+        config.TRAIN.BASE_LR = lr
+        config.freeze()
+        main()
     
 if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
     main()
+                  
