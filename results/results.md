@@ -17,3 +17,6 @@ batch size选择
 
 用256应该更好一些。
 
+对depth为4的baseline，LR的调参结果如下
+
+![baseline_depth4_SearchLR](D:\College\projects\Test Models\results\baseline_depth4_SearchLR.png)

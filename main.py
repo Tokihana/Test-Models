@@ -4,6 +4,7 @@ import time
 import datetime
 import argparse
 # third-party dependencies
+import wandb
 import torch
 import torch.nn as nn
 from timm.utils import accuracy, AverageMeter
@@ -37,12 +38,13 @@ def main():
             "batch size": config.DATA.BATCH_SIZE,
             # model architecture
             "architecture": config.MODEL.ARCH,
+            "encoder depth": config.MODEL.DEPTH,
             # training settings
             "learning_rate": config.TRAIN.BASE_LR,
             "epochs": config.TRAIN.EPOCHS,
             ## criterion
             "criterion": config.TRAIN.CRITERION.NAME,
-            "LabelSmoothing": TRAIN.CRITERION.LABEL_SMOOTHING,
+            "LabelSmoothing": config.TRAIN.CRITERION.LABEL_SMOOTHING,
             ## optimizer
             "optimizer": config.TRAIN.OPTIMIZER.NAME,
             "optimizer eps": config.TRAIN.OPTIMIZER.EPS,
@@ -72,7 +74,7 @@ def main():
     
     if config.MODE.THROUGHPUT:
         through, step_time=throughput(model, train_loader, logger)
-        wandb.log({'throughput':through, 'time per stem':step_time}）
+        wandb.log({'throughput':through, 'time per stem':step_time})
         return
     
     # build optimier
