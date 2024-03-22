@@ -92,7 +92,7 @@ _C.TRAIN.RESUME = ''
 # criterion
 _C.TRAIN.CRITERION = CN()
 # type of criterion, support CrossEntropy, LabelSmoothing, SoftTargetCE
-_C.TRAIN.CRITERION.NAME = 'LabelSmoothing'
+_C.TRAIN.CRITERION.NAME = 'CrossEntropy'
 # Label Smoothing
 _C.TRAIN.CRITERION.LABEL_SMOOTHING = 0.1
 

@@ -124,6 +124,8 @@ def main():
     total_time = time.time() - start_time
     logger.info(f'Total training time: {str(datetime.timedelta(seconds=int(total_time)))}')
     
+    wandb.finish()
+    
 def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_scheduler, epoch, mix_fn, logger):
     model.train()
     optimizer.zero_grad() # clear accumulated gradients
@@ -223,7 +225,7 @@ def validate(config, model, data_loader, logger):
     return acc_avg.avg,  loss_avg.avg
                   
 def _test_lr():
-    lr_list = [0.1**i for i in range(-8, -1)]
+    lr_list = [0.1**i for i in range(1, 8)]
     for lr in lr_list:
         config.defrost()
         config.TRAIN.BASE_LR = lr
@@ -233,5 +235,6 @@ def _test_lr():
 if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
-    main()
+    # main()
+    _test_lr()
                   
