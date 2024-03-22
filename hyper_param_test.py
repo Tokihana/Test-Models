@@ -1,6 +1,9 @@
+# inline dependencies
 import argparse
 import unittest
-
+# third-party dependencies
+import wandb
+# local dependencies
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
@@ -48,7 +51,7 @@ class LRTests(unittest.TestCase):
         self.criterion = build_criterion(config)
         
     def test_lr(self):
-        lr_list = [0.1**i for i in range(-8, 1)]
+        lr_list = [0.1**i for i in range(1, 8)]
         lr_res = []
         logger.info(f'testing lr')
         for lr in lr_list:
@@ -64,11 +67,19 @@ class LRTests(unittest.TestCase):
     def _train_10epoch(self):
         for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
             train_one_epoch(config=config, model=self.model, data_loader=self.train_loader, epoch=epoch, mix_fn = self.mix_fn, criterion=self.criterion, optimizer=self.optimizer, lr_scheduler=self.lr_scheduler, logger=logger)
-            if val_loader is not None:
+            if self.val_loader is not None:
                 acc, loss = validate(config, self.model, self.val_loader, logger)
                 max_acc = max(max_acc, acc)
             
         return max_acc
+    
+class OptimizerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.model = create_model(args, config)
+        self.model.cuda()
+        self.train_loader, self.val_loader, self.mix_fn = build_loader(config)
+        self.criterion = build_criterion(config)
     
 if __name__ == '__main__':
     # make config

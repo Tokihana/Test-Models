@@ -25,6 +25,36 @@ def parse_option():
     return args, config
 
 def main():
+    # init wandb
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project=config.SYSTEM.EXPERIMENT_NAME,
+    
+        # track hyperparameters and run metadata
+        config={
+            # dataset
+            "dataset": config.DATA.DATASET,
+            # model architecture
+            "architecture": config.MODEL.ARCH,
+            # training settings
+            "learning_rate": config.TRAIN.BASE_LR,
+            "epochs": config.TRAIN.EPOCHS,
+            ## criterion
+            "criterion": config.TRAIN.CRITERION.NAME,
+            "LabelSmoothing": TRAIN.CRITERION.LABEL_SMOOTHING,
+            ## optimizer
+            "optimizer": config.TRAIN.OPTIMIZER.NAME,
+            "optimizer eps": config.TRAIN.OPTIMIZER.EPS,
+            "optimizer beta1": config.TRAIN.OPTIMIZER.BETAS[0],
+            "optimizer beta2": config.TRAIN.OPTIMIZER.BETAS[1],
+            "optimizer momentum": config.TRAIN.OPTIMIZER.MOMENTUM,
+            ## lr scheduler
+            "scheduler": config.TRAIN.LR_SCHEDULER.NAME,
+            "scheduler gamma": config.TRAIN.LR_SCHEDULER.GAMMA,
+            
+        }
+    )
+    
     # load datasets
     train_loader, val_loader, mix_fn = build_loader(config)
     logger.info(f'Train: {len(train_loader)}, Test: {len(val_loader)}')

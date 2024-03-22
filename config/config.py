@@ -9,7 +9,9 @@ _C = CN()
 # SYSTEM settings
 ## ----------------------------------------------
 _C.SYSTEM = CN()
-# emperimental information
+# experiment name
+_C.SYSTEM.EXPERIMENT_NAME = ''
+# emperiment path
 _C.SYSTEM.EXPERIMENT_PATH = './results/minitest'
 # log path, joint with experiment path
 _C.SYSTEM.LOG = 'log'
@@ -86,7 +88,7 @@ _C.TRAIN.RESUME = ''
 # criterion
 _C.TRAIN.CRITERION = CN()
 # type of criterion, support CrossEntropy, LabelSmoothing, SoftTargetCE
-_C.TRAIN.CRITERION.NAME = 'CrossEntropy'
+_C.TRAIN.CRITERION.NAME = 'LabelSmoothing'
 # Label Smoothing
 _C.TRAIN.CRITERION.LABEL_SMOOTHING = 0.1
 

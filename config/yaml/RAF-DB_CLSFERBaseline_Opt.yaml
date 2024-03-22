@@ -1,6 +1,5 @@
 # RAF-DB_CLSFERBaseline.yaml
 SYSTEM:
-    EXPERIMENT_NAME: 'RAF-DB_CLSFERBaseline'
     EXPERIMENT_PATH: './results/RAF-DB_CLSFERBaseline'
     SAVE_FREQ: 30
     
@@ -17,5 +16,11 @@ MODE:
     
 TRAIN:
     EPOCHS: 10
+    
+    OPTIMIZER:
+        NAME: 'Adam'
+        
+    LR_SCHEDULER:
+        NAME: 'None'
     
     
