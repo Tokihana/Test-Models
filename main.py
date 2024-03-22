@@ -29,10 +29,12 @@ def main():
     # init wandb
     wandb.init(
         # set the wandb project where this run will be logged
-        project=config.SYSTEM.EXPERIMENT_NAME,
+        project=config.SYSTEM.PROJECT_NAME,
     
         # track hyperparameters and run metadata
         config={
+            # emperiment name
+            "experiment name": config.SYSTEM.EXPERIMENT_NAME,
             # dataset
             "dataset": config.DATA.DATASET,
             "batch size": config.DATA.BATCH_SIZE,

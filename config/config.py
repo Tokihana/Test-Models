@@ -9,6 +9,8 @@ _C = CN()
 # SYSTEM settings
 ## ----------------------------------------------
 _C.SYSTEM = CN()
+# project name, for w&b
+_C.SYSTEM.PROJECT_NAME = ''
 # experiment name
 _C.SYSTEM.EXPERIMENT_NAME = ''
 # emperiment path
