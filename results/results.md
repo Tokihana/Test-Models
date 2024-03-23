@@ -56,3 +56,7 @@ CLSFERBaseline_depth8_SearchLR
 
 # beta1筛选
 
+![RAF-DB_CLSFERBaseline_SearchBETA1](C:\Users\wangj\Downloads\RAF-DB_CLSFERBaseline_SearchBETA1.png)
+
+0.9就行
+

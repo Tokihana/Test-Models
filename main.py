@@ -254,6 +254,17 @@ def _test_beta1():
         config.TRAIN.OPTIMIZER.BETAS = (beta1, config.TRAIN.OPTIMIZER.BETAS[1])
         config.freeze()
         main()
+        
+def _test_beta2():
+    beta2_list = [0.8, 0.9, 0.99, 0.995, 0.997, 0.999, 0.999, 1]
+    config.defrost()
+    config.TRAIN.EPOCHS = 35
+    config.freeze()
+    for beta2 in beta2_list:
+        config.defrost()
+        config.TRAIN.OPTIMIZER.BETAS = (config.TRAIN.OPTIMIZER.BETAS[0], beta2)
+        config.freeze()
+        main()
 
     
 if __name__ == '__main__':
