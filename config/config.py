@@ -52,7 +52,7 @@ _C.MODEL.ARCH = 'IResNet50'
 # default nb_classes
 _C.MODEL.NUM_CLASS = 7
 # encoder depth
-_C.MODEL.DEPTH = 8
+_C.MODEL.DEPTH = 2
 
 
 ## ----------------------------------------------

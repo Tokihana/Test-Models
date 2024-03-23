@@ -225,12 +225,25 @@ def validate(config, model, data_loader, logger):
     return acc_avg.avg,  loss_avg.avg
                   
 def _test_lr():
-    lr_list = [0.1**i for i in range(1, 8)]
+    #lr_list = [0.1**i for i in range(1, 8)]
+    lr_list = (0.1**torch.linspace(3, 5, 11)).tolist()
     for lr in lr_list:
         config.defrost()
         config.TRAIN.BASE_LR = lr
         config.freeze()
         main()
+        
+def _test_eps():
+    eps_list = [0.1**i for i in range(6, 11)] # 6, 7, 8, 9, 10
+    config.defrost()
+    config.TRAIN.EPOCHS = 20
+    config.freeze()
+    for eps in eps_list:
+        config.defrost()
+        config.TRAIN.OPTIMIZER.EPS = eps
+        config.freeze()
+        main()
+
     
 if __name__ == '__main__':
     args, config = parse_option()

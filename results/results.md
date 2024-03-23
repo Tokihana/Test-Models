@@ -13,10 +13,38 @@ batch size选择
 | 64         | 1449       | 0.044         |
 | 128        | 1543       | 0.083         |
 | 256        | 1591       | 0.161         |
-| 513        | 1602       | 0.319         |
+| 512        | 1602       | 0.319         |
 
-用256应该更好一些。
+用256应该更好一些（depth6和depth8也可行）。
 
 对depth为4的baseline，LR的调参结果如下
 
 ![baseline_depth4_SearchLR](D:\College\projects\Test Models\results\baseline_depth4_SearchLR.png)
+
+基本上2e-4左右就好。
+
+depth6，区间也在[1e-5, 1e-3]
+
+![CLSFERBaseline_depth8_SearchLR](D:\College\projects\Test Models\results\CLSFERBaseline_depth8_SearchLR.png)
+
+depth8，区间基本一致
+
+![RAF-DB_CLSFERBaseline_depth8_SearchLR](C:\Users\wangj\Downloads\RAF-DB_CLSFERBaseline_depth8_SearchLR.png)
+
+不同depth（2, 4, 6, 8）的acc对比（确定模型层数）
+
+配置好实验名称，方便筛选
+
+```
+CLSFERBaseline_depth2_SearchLR
+CLSFERBaseline_depth4_SearchLR
+CLSFERBaseline_depth6_SearchLR
+CLSFERBaseline_depth8_SearchLR
+```
+
+![CLSFERBaseline_depth_test](D:\College\projects\Test Models\results\CLSFERBaseline_depth_test.png)
+
+这样来看，2depth可能足够了，LR取个4e-4
+
+# eps筛选
+

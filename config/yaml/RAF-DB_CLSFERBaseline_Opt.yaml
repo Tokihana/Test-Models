@@ -12,11 +12,11 @@ DATA:
     
 MODEL:
     ARCH: 'CLSFERBaseline'
-    DEPTH: 6
+    DEPTH: 2
     
 TRAIN:
     EPOCHS: 1
-    BASE_LR: 1e-3
+    BASE_LR: 4e-4
     
     OPTIMIZER:
         NAME: 'Adam'
