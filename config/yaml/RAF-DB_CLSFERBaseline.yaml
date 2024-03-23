@@ -1,8 +1,8 @@
 # RAF-DB_CLSFERBaseline.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'CLSFERBaseline_depth2_SearchBETA2'
-    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERBaseline_depth2_SearchBETA2'
+    EXPERIMENT_NAME: 'CLSFERBaseline_depth2_WithOutDecay_200epoch'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERBaseline_WithOutDecay_200epoch'
     SAVE_FREQ: 30
     
 DATA:
@@ -15,7 +15,7 @@ MODEL:
     DEPTH: 2
     
 TRAIN:
-    EPOCHS: 35
+    EPOCHS: 200
     BASE_LR: 4e-4
     
     OPTIMIZER:
@@ -28,3 +28,5 @@ TRAIN:
         
     CRITERION:
         NAME: 'CrossEntropy'
+    
+    

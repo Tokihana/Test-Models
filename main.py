@@ -116,6 +116,7 @@ def main():
             acc, loss = validate(config, model, val_loader, logger)
             wandb.log({'acc':acc, 'loss':loss})
             max_acc = max(max_acc, acc)
+            wandb.log({'running max acc':max_acc})
             logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
             if max_acc == acc: # max_acc updated
                 save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
