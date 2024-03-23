@@ -2,14 +2,16 @@
 import argparse
 import unittest
 # third-party dependencies
-import wandb
+#import wandb
+import torch
 # local dependencies
+from model.ir50 import iresnet50
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
 from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput
 from model import create_model
-from main import train_one_epoch, validate
+#from main import train_one_epoch, validate
 
 def parse_option():
     parser = argparse.ArgumentParser()
@@ -21,6 +23,18 @@ def parse_option():
     args, unparsed = parser.parse_known_args()
     config = get_config(args)
     return args, config
+
+class BackboneTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.model = create_model(args, config)
+        self.model.cuda()
+    def test_load_backbone(self):
+        irback = iresnet50(num_features=7)
+        checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
+        miss, unexcepted = irback.load_state_dict(checkpoint, strict=False)
+        logger.info(f'Miss: {miss},\t Unexcept: {unexcepted}')
+        del checkpoint
 
 class BatchSizeTests(unittest.TestCase):
     @classmethod
