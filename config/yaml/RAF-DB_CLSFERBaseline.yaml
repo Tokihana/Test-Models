@@ -1,21 +1,31 @@
 # RAF-DB_CLSFERBaseline.yaml
 SYSTEM:
-    EXPERIMENT_NAME: 'RAF-DB_CLSFERBaseline'
-    EXPERIMENT_PATH: './results/RAF-DB_CLSFERBaseline'
+    PROJECT_NAME: 'CLSFERBaseline'
+    EXPERIMENT_NAME: 'CLSFERBaseline_depth2_SearchEPS'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERBaseline_depth2_SearchEPS'
     SAVE_FREQ: 30
     
 DATA:
-    BATCH_SIZE: 4
+    BATCH_SIZE: 256
     DATASET: 'RAF-DB'
-    DATA_PATH: '../FERdatasets/RAF-DB'
+    DATA_PATH: '../autodl-tmp/RAF-DB'
     
 MODEL:
     ARCH: 'CLSFERBaseline'
-    
-MODE:
-    THROUGHPUT: True
+    DEPTH: 2
     
 TRAIN:
-    EPOCHS: 10
+    EPOCHS: 20
+    BASE_LR: 4e-4
+    
+    OPTIMIZER:
+        NAME: 'Adam'
+        EPS: 1e-7
+        
+    LR_SCHEDULER:
+        NAME: 'None'
+        
+    CRITERION:
+        NAME: 'CrossEntropy'
     
     

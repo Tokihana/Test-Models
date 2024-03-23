@@ -243,6 +243,17 @@ def _test_eps():
         config.TRAIN.OPTIMIZER.EPS = eps
         config.freeze()
         main()
+        
+def _test_beta1():
+    beta1_list = [0.7, 0.8, 0.85, 0.9, 0.95, 1]
+    config.defrost()
+    config.TRAIN.EPOCHS = 25
+    config.freeze()
+    for beta1 in beta1_list:
+        config.defrost()
+        config.TRAIN.OPTIMIZER.BETAS = (beta1, config.TRAIN.OPTIMIZER.BETAS[1])
+        config.freeze()
+        main()
 
     
 if __name__ == '__main__':

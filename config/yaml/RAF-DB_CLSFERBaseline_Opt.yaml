@@ -1,8 +1,8 @@
 # RAF-DB_CLSFERBaseline.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'CLSFERBaseline_depth6_SearchLR_automatic_test'
-    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERBaseline'
+    EXPERIMENT_NAME: 'CLSFERBaseline_depth2_SearchLR'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERBaseline_depth2_SearchLR'
     SAVE_FREQ: 30
     
 DATA:
@@ -20,6 +20,7 @@ TRAIN:
     
     OPTIMIZER:
         NAME: 'Adam'
+        EPS: 1e-7
         
     LR_SCHEDULER:
         NAME: 'None'

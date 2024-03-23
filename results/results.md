@@ -29,7 +29,7 @@ depth6，区间也在[1e-5, 1e-3]
 
 depth8，区间基本一致
 
-![RAF-DB_CLSFERBaseline_depth8_SearchLR](C:\Users\wangj\Downloads\RAF-DB_CLSFERBaseline_depth8_SearchLR.png)
+![RAF-DB_CLSFERBaseline_depth8_SearchLR](D:\College\projects\Test Models\results\RAF-DB_CLSFERBaseline_depth8_SearchLR.png)
 
 不同depth（2, 4, 6, 8）的acc对比（确定模型层数）
 
@@ -47,4 +47,12 @@ CLSFERBaseline_depth8_SearchLR
 这样来看，2depth可能足够了，LR取个4e-4
 
 # eps筛选
+
+![RAF-DB_CLSFERBaseline_SearchEPS](D:\College\projects\Test Models\results\RAF-DB_CLSFERBaseline_SearchEPS.png)
+
+对depth2的模型来说，1e-7更合适些。
+
+
+
+# beta1筛选
 
