@@ -23,8 +23,8 @@ def build_loader(config):
                                              pin_memory=config.DATA.PIN_MEMORY,
                                              drop_last=False)
 
-    cutmix = v2.CutMix(num_classes=config.MODEL.NUM_CLASS)
-    mixup = v2.MixUp(num_classes=config.MODEL.NUM_CLASS)
+    cutmix = v2.CutMix(alpha=config.AUG.MIXUP, num_classes=config.MODEL.NUM_CLASS)
+    mixup = v2.MixUp(alpha=config.AUG.MIXUP, num_classes=config.MODEL.NUM_CLASS)
     cutmix_or_mixup = v2.RandomChoice([cutmix, mixup]) # used after loader sampling
                                                         # example:
                                                         # for (images, targets) in loader:

@@ -277,6 +277,14 @@ def _test_gamma():
         config.TRAIN.LR_SCHEDULER.GAMMA = gamma
         config.freeze()
         main()
+        
+def _test_mixup():
+    alpha_list = [0., 0.2, 0.5, 1.]
+    for alpha in alpha_list:
+        config.defrost()
+        config.AUG.MIXUP = alpha
+        config.freeze()
+        main()
 
     
 if __name__ == '__main__':
