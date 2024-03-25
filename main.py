@@ -173,7 +173,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
             etas = batch_time.avg*(num_steps - idx) # estimated time of arrival
             logger.info(
                 f'Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{len(data_loader)}]\t'
-                f'eta {datetime.timedelta(seconds=int(etas))} lr {lr:.6f}\t'
+                f'eta {datetime.timedelta(seconds=int(etas))} lr {lr:.8f}\t'
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Mem {memory_used:.0f}MB')
