@@ -24,28 +24,6 @@ def parse_option():
     config = get_config(args)
     return args, config
 
-class BackboneTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.model = create_model(args, config)
-        self.model.cuda()
-    def test_load_backbone(self):
-        irback = iresnet50(num_features=7)
-        checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
-        miss, unexcepted = irback.load_state_dict(checkpoint, strict=False)
-        logger.info(f'Miss: {miss},\t Unexcept: {unexcepted}')
-        del checkpoint
-        
-class NonMultiCLSTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.model = create_model(args, config)
-        self.model.cuda()
-        self.input = torch.rand((1, 3, 224, 224)).cuda()
-        
-    def test_model(self):
-        out = self.model(self.input) 
-        logger.info(out.shape)
 
 class BatchSizeTests(unittest.TestCase):
     @classmethod

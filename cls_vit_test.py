@@ -9,6 +9,40 @@ from model.ir50 import iresnet50
 from model.ir50_poster import Backbone
 from model.baseline import Baseline
 
+def parse_option():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_CLSFERNonMulti.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--log', default='./optim', type=str, help='path to log')
+    parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
+
+    args, unparsed = parser.parse_known_args()
+    config = get_config(args)
+    return args, config
+
+class BackboneTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.model = create_model(args, config)
+        self.model.cuda()
+    def test_load_backbone(self):
+        irback = iresnet50(num_features=7)
+        checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
+        miss, unexcepted = irback.load_state_dict(checkpoint, strict=False)
+        logger.info(f'Miss: {miss},\t Unexcept: {unexcepted}')
+        del checkpoint
+        
+class NonMultiCLSTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.model = create_model(args, config)
+        self.model.cuda()
+        self.input = torch.rand((1, 3, 224, 224)).cuda()
+        
+    def test_model(self):
+        out = self.model(self.input) 
+        logger.info(out.shape)
+
 class IrBackTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -85,4 +119,9 @@ class CLSViTTests(unittest.TestCase):
             
 
 if __name__ == '__main__':
+    # make config
+    args, config = parse_option()
+    # make logger
+    logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
+    
     unittest.main()
