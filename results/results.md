@@ -83,3 +83,15 @@ CLSFERBaseline_depth8_SearchLR
 > 3. 较长epoch（50~60）验证模型架构，对不同lr进行grid search
 > 4. 验证weight decay
 
+
+
+# weight decay
+
+试算了两种decay，效果不是很理想，考虑到目前要调参的项还很多，暂时还是先不用weight decay吧。
+
+![CLSFERBaseline_scheduler](D:\College\projects\Test Models\results\CLSFERBaseline_scheduler.png)
+
+
+
+# CLS ViT 验证
+

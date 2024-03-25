@@ -76,18 +76,29 @@ class NonMultiCLSBlock(nn.Module):
                 proj_drop: float=0.,
                 drop_path: float=0.,
                 act_layer: nn.Module=nn.GELU,
-                norm_layer: nn.Module=nn.LayerNorm):
+                norm_layer: nn.Module=nn.LayerNorm,
+                has_mlp: bool=True):
         super(NonMultiCLSBlock, self).__init__()
-        self.norm = norm_layer(dim)
+        self.norm1 = norm_layer(dim)
         self.attn = CLSAttention(dim, 
                                  num_heads=num_heads,
                                  qkv_bias=qkv_bias,
                                  attn_drop=attn_drop,
                                  proj_drop=proj_drop,)
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        if has_mlp:
+            self.norm2 = norm_layer(dim)
+            mlp_hidden_dim = int(dim * mlp_ratio)
+            self.mlp = Mlp(in_features=dim, 
+                           hidden_features=int(dim*mlp_ratio), 
+                           act_layer=act_layer, 
+                           drop=proj_drop)
+            self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x[:, 0:1, ...] = x[:, 0:1, ...] + self.drop_path(self.attn(self.norm(x)))
+        x = x[:, 0:1, ...] + self.drop_path1(self.attn(self.norm1(x)))
+        if self.has_mlp:
+            x = x + self.drop_path2(self.mlp(self.norm2(x)))
         return x
     
 class NonMultiCLSFER(nn.Module):
