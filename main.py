@@ -160,7 +160,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if config.TRAIN.LR_SCHEDULER == 'cosine':
+        if config.TRAIN.LR_SCHEDULER.NAME == 'cosine':
             lr_scheduler.step_update(epoch*num_steps*idx)
         
         loss_avg.update(loss.item(), targets.size(0))
@@ -177,7 +177,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Mem {memory_used:.0f}MB')
-    if config.TRAIN.LR_SCHEDULER == 'exponential':
+    if config.TRAIN.LR_SCHEDULER.NAME == 'exponential':
         lr_scheduler.step()
     epoch_time = time.time() - start
     logger.info(f'EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}')
