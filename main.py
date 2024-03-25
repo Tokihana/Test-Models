@@ -267,6 +267,17 @@ def _test_beta2():
         config.freeze()
         main()
 
+def _test_gamma():
+    gamma_list = [0.955, 0.98]
+    config.defrost()
+    config.TRAIN.EPOCHS = 100
+    config.freeze()
+    for gamma in gamma_list:
+        config.defrost()
+        config.TRAIN.LR_SCHEDULER = gamma
+        config.freeze()
+        main()
+
     
 if __name__ == '__main__':
     args, config = parse_option()

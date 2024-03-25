@@ -54,9 +54,32 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# beta1筛选
+# beta1&2筛选
 
 ![RAF-DB_CLSFERBaseline_SearchBETA1](C:\Users\wangj\Downloads\RAF-DB_CLSFERBaseline_SearchBETA1.png)
 
-0.9就行
+（0.9, 0.999)就行
+
+# 长epoch测试（50~60）
+
+大LR导致LOSS变NaN情况明显，需要进一步降低LR/考虑正则方法。
+
+在长epoch、较低LR条件下，重新验证depth影响，更深的模型表现出更好的效果。
+
+![CLSFERBaseline_SearchDepth&LR](D:\College\projects\Test Models\results\CLSFERBaseline_SearchDepth&LR.png)
+
+> 指标通常对LR高度敏感，因此大部分调参情况下，都需要将LR作为冗余参数共同调参。
+>
+> depth的性能需要较长的epoch、合适的LR才能够充分体现。目前来看需要做grid search
+
+同时在depth8的条件下，验证eps的效果；实验结果无法说明eps和指标有高相关性，考虑将其作为固定参数，暂时设置为1e-8
+
+![CLSFERBaseline_eps](D:\College\projects\Test Models\results\CLSFERBaseline_eps.png)
+
+> 整理调参工作流：
+>
+> 1. 参照以往论文和调参经验，设置合适的初始参数。
+> 2. 适当验证optimizer参数，影响不明显
+> 3. 较长epoch（50~60）验证模型架构，对不同lr进行grid search
+> 4. 验证weight decay
 
