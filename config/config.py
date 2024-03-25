@@ -47,12 +47,18 @@ _C.DATA.PIN_MEMORY = True
 # MODEL settings
 ## ----------------------------------------------
 _C.MODEL = CN()
-# model name, support IResNet50, RepVGGs
+# model name, support IResNet50, RepVGGs, ViT-FER baseline, NonMultiCLSFER
 _C.MODEL.ARCH = 'IResNet50'
 # default nb_classes
 _C.MODEL.NUM_CLASS = 7
 # encoder depth
 _C.MODEL.DEPTH = 2
+# mlp ratio
+_C.MODEL.MLP_RATIO = 4.
+# patch drop
+_C.MODEL.PATCH_DROP = 0.
+# attn drop
+_C.MODEL.ATTN_DROP = 0.
 
 
 ## ----------------------------------------------

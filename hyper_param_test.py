@@ -16,7 +16,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/RAF-DB_CLSFERBaseline.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_CLSFERNonMulti.yaml', type=str, help='path to config yaml')
     parser.add_argument('--log', default='./optim', type=str, help='path to log')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
@@ -35,6 +35,17 @@ class BackboneTests(unittest.TestCase):
         miss, unexcepted = irback.load_state_dict(checkpoint, strict=False)
         logger.info(f'Miss: {miss},\t Unexcept: {unexcepted}')
         del checkpoint
+        
+class NonMultiCLSTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.model = create_model(args, config)
+        self.model.cuda()
+        self.input = torch.rand((1, 3, 224, 224)).cuda()
+        
+    def test_model(self):
+        out = self.model(self.input) 
+        logger.info(out.shape)
 
 class BatchSizeTests(unittest.TestCase):
     @classmethod

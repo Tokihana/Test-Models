@@ -24,7 +24,7 @@ class Baseline(nn.Module):
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
         print(f'Miss: {miss},\t Unexcept: {unexcepted}')
-        del checkpoint
+        del checkpoint, miss, unexcepted
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
         self.blocks = nn.Sequential(*[

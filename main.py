@@ -227,7 +227,7 @@ def validate(config, model, data_loader, logger):
                   
 def _test_lr():
     #lr_list = [0.1**i for i in range(1, 8)]
-    lr_list = (0.1**torch.linspace(3, 5, 11)).tolist()
+    lr_list = (0.1**torch.linspace(4.5, 5.5, 7)).tolist()
     for lr in lr_list:
         config.defrost()
         config.TRAIN.BASE_LR = lr
