@@ -126,7 +126,8 @@ _C.TRAIN.OPTIMIZER.MOMENTUM = 0.9
 # AUGMENTATION settings
 ## ----------------------------------------------
 _C.AUG = CN()
-_C.AUG.MIXUP = 0.2
+# mixup alpha, default 1.0
+_C.AUG.MIXUP = 1.0
 
 ## ----------------------------------------------
 # TEST settings
