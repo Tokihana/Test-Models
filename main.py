@@ -274,7 +274,7 @@ def _test_gamma():
     config.freeze()
     for gamma in gamma_list:
         config.defrost()
-        config.TRAIN.LR_SCHEDULER = gamma
+        config.TRAIN.LR_SCHEDULER.GAMMA = gamma
         config.freeze()
         main()
 
@@ -283,5 +283,5 @@ if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
     # main()
-    _test_lr()
-                  
+    #_test_lr()
+    _test_gamma()             
