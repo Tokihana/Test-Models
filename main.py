@@ -38,12 +38,19 @@ def main():
             # dataset
             "dataset": config.DATA.DATASET,
             "batch size": config.DATA.BATCH_SIZE,
+            "img size": config.DATA.IMG_SIZE,
+            "num workers": config.DATA.NUM_WORKERS,
+            "pin memory": config.DATA.PIN_MEMORY,
             # model architecture
             "architecture": config.MODEL.ARCH,
             "encoder depth": config.MODEL.DEPTH,
+            "num classes": config.MODEL.NUM_CLASS,
+            "mlp ratio": config.MODEL.MLP_RATIO,
+            "attn drop": config.MODEL.ATTN_DROP,
             # training settings
             "learning_rate": config.TRAIN.BASE_LR,
             "epochs": config.TRAIN.EPOCHS,
+            "resume": config.TRAIN.RESUME,
             ## criterion
             "criterion": config.TRAIN.CRITERION.NAME,
             "LabelSmoothing": config.TRAIN.CRITERION.LABEL_SMOOTHING,
@@ -56,7 +63,8 @@ def main():
             ## lr scheduler
             "scheduler": config.TRAIN.LR_SCHEDULER.NAME,
             "scheduler gamma": config.TRAIN.LR_SCHEDULER.GAMMA,
-            
+            # augment
+            "mixup alpha": config.AUG.MIXUP,
         }
     )
     
@@ -293,4 +301,4 @@ if __name__ == '__main__':
     # main()
     #_test_lr()
     #_test_gamma()     
-    _test_mixup()
+     _test_mixup()

@@ -14,7 +14,8 @@ def create_model(args, config):
         model = Baseline(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
                         attn_drop=config.MODEL.ATTN_DROP, )
     elif config.MODEL.ARCH == 'NonMultiCLSFER':
-        model = NonMultiCLSFER(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, attn_drop=config.MODEL.ATTN_DROP,)
+        model = NonMultiCLSFER(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
+                               attn_drop=config.MODEL.ATTN_DROP,)
         
     return model
 

@@ -14,6 +14,9 @@ MODEL:
     ARCH: 'NonMultiCLSFER'
     DEPTH: 8
     
+MODE:
+    THROUGHPUT: True
+    
 TRAIN:
     EPOCHS: 60
     BASE_LR: 5e-5
