@@ -95,6 +95,7 @@ def compute_flop_params(config, model, logger):
     if 'RepVGG' in config.MODEL.ARCH:
         model.switch_repvggplus_to_deploy()
     flops, params = profile(model, inputs=(img.cuda(),))
+    #flops, params = profile(model, inputs=(img,))
     flops, params = clever_format([flops, params], '%.3f')
     logger.info(f'number of parms: {params}\t FLOPs:{flops}')
     del img

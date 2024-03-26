@@ -1,9 +1,36 @@
-# test.yaml
+# RAF-DB_CLSFERBaseline.yaml
+SYSTEM:
+    PROJECT_NAME: 'CLSFERBaseline'
+    EXPERIMENT_NAME: 'CLSFERNonMulti_SearchDepth&LR'
+    EXPERIMENT_PATH: './results/RAF-DB_CLSFERNonMulti_SearchDepth&LR_depth8_ep1e-8'
+    SAVE_FREQ: 30
+    
 DATA:
-    BATCH_SIZE: 4
-    DATASET: 'FERPlus'
-    DATA_PATH: '../../FERdatasets/FERPlus'
-
+    BATCH_SIZE: 5
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../FERdatasets/RAF-DB'
+    
 MODEL:
-    RESUME: './checkpoint/test.pth'
+    ARCH: 'NonMultiCLSFER'
+    DEPTH: 8
+    
+TRAIN:
+    EPOCHS: 60
+    BASE_LR: 5e-5
+    
+    OPTIMIZER:
+        NAME: 'Adam'
+        EPS: 1e-8
+        BETAS: (0.9, 0.999)
+        
+    LR_SCHEDULER:
+        NAME: 'exponential'
+        GAMMA: 0.955
+        
+    CRITERION:
+        NAME: 'CrossEntropy'
+        
+AUG:
+    MIXUP: 1.0
+    
     

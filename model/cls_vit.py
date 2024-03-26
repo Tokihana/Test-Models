@@ -70,7 +70,7 @@ class CLSBlock(nn.Module):
 class NonMultiCLSBlock(nn.Module):
     def __init__(self, dim: int,
                 num_heads: int=8,
-                mlp_ratio: float=4., # not use, for param equivalent
+                mlp_ratio: float=4.,
                 qkv_bias: bool=False,
                 attn_drop: float=0.,
                 proj_drop: float=0.,
@@ -79,6 +79,7 @@ class NonMultiCLSBlock(nn.Module):
                 norm_layer: nn.Module=nn.LayerNorm,
                 has_mlp: bool=True):
         super(NonMultiCLSBlock, self).__init__()
+        self.has_mlp = has_mlp
         self.norm1 = norm_layer(dim)
         self.attn = CLSAttention(dim, 
                                  num_heads=num_heads,

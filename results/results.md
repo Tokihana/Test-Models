@@ -95,3 +95,59 @@ CLSFERBaseline_depth8_SearchLR
 
 # CLS ViT 验证
 
+![CLSFER_Compare](D:\College\projects\Test Models\results\CLSFER_Compare.png)
+
+| LR       | MODEL    | ACC        |
+| -------- | -------- | ---------- |
+| 3.20E-05 | Baseline | 82.986     |
+|          | CLSFER   | **83.638** |
+| 1.80E-05 | Baseline | 84.452     |
+|          | CLSFER   | **84.778** |
+| 1.00E-05 | Baseline | 83.67      |
+|          | CLSFER   | **84.387** |
+| 5.60E-06 | Baseline | 84.713     |
+|          | CLSFER   | **85.039** |
+| 3.20E-06 | Baseline | 83.605     |
+|          | CLSFER   | **85.398** |
+
+好像用CLSBlock效果更好一些？
+
+
+
+# 运行效率验证
+
+| Model                      | Batch Size | throughput | FLOPs(G)  | Params.(M) | Memory Usage(M) | Memory Usage(G) |
+| -------------------------- | ---------- | ---------- | --------- | ---------- | --------------- | --------------- |
+| Baseline(IR50 + ViT Block) | 256        | 1381       | 7.594     | **55.954** | 21580           | 21.07           |
+| IR50 + CLS  Block          | 256        | **1790**   | **6.385** | 55.955     | **18479**       | 18.05           |
+
+
+
+# Baseline取点重复实验
+
+
+
+# 测试下在CPU模式下的通过速度
+
+云端的CPU为12 vCPU Intel(R) Xeon(R) Platinum 8255C CPU @ 2.50GHz
+
+本机的为13th Gen Intel(R) i9-13900HX
+
+| throughput | time per step |
+| ---------- | ------------- |
+| 1          | 2.88          |
+
+
+
+# Mixup alpah 验证
+
+
+
+# Weight decay验证
+
+
+
+# drop attn验证
+
+
+
