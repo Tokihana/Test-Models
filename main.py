@@ -292,4 +292,5 @@ if __name__ == '__main__':
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
     # main()
     #_test_lr()
-    _test_gamma()             
+    #_test_gamma()     
+    _test_mixup()

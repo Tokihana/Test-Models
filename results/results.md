@@ -125,13 +125,15 @@ CLSFERBaseline_depth8_SearchLR
 
 # Baseline取点重复实验
 
+| LR       | Model                      | Acc   |
+| -------- | -------------------------- | ----- |
+| 5.60E-06 | Baseline(IR50 + ViT Block) | 84.55 |
+
 
 
 # 测试下在CPU模式下的通过速度
 
-云端的CPU为12 vCPU Intel(R) Xeon(R) Platinum 8255C CPU @ 2.50GHz
-
-本机的为13th Gen Intel(R) i9-13900HX
+本机的CPU为13th Gen Intel(R) i9-13900HX
 
 | throughput | time per step |
 | ---------- | ------------- |
