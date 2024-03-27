@@ -46,7 +46,7 @@ CLSFERBaseline_depth8_SearchLR
 
 这样来看，2depth可能足够了，LR取个4e-4
 
-# eps筛选
+## eps筛选
 
 ![RAF-DB_CLSFERBaseline_SearchEPS](D:\College\projects\Test Models\results\RAF-DB_CLSFERBaseline_SearchEPS.png)
 
@@ -54,13 +54,13 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# beta1&2筛选
+## beta1&2筛选
 
 ![RAF-DB_CLSFERBaseline_SearchBETA1](C:\Users\wangj\Downloads\RAF-DB_CLSFERBaseline_SearchBETA1.png)
 
 （0.9, 0.999)就行
 
-# 长epoch测试（50~60）
+## 长epoch测试（50~60）
 
 大LR导致LOSS变NaN情况明显，需要进一步降低LR/考虑正则方法。
 
@@ -85,7 +85,7 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# weight decay
+## weight decay
 
 试算了两种decay，效果不是很理想，考虑到目前要调参的项还很多，暂时还是先不用weight decay吧。
 
@@ -114,7 +114,7 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# 运行效率验证
+## 运行效率验证
 
 | Model                      | Batch Size | throughput | FLOPs(G)  | Params.(M) | Memory Usage(M) | Memory Usage(G) |
 | -------------------------- | ---------- | ---------- | --------- | ---------- | --------------- | --------------- |
@@ -123,7 +123,7 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# Baseline取点重复实验
+## Baseline取点重复实验
 
 | LR       | Model                      | Acc   |
 | -------- | -------------------------- | ----- |
@@ -131,7 +131,7 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# 测试下在CPU模式下的通过速度
+## 测试下在CPU模式下的通过速度
 
 本机的CPU为13th Gen Intel(R) i9-13900HX
 
@@ -141,15 +141,67 @@ CLSFERBaseline_depth8_SearchLR
 
 
 
-# Mixup alpah 验证
+## Mixup alpah 验证
+
+在[0, 1]范围内，趋近1效果好像更好一些，调个2测试一下，如果效果变差的话，说明维持在均匀一些的分布（alpha = 1）可能更好。目前来看，模型对LR的敏感度更高，可以的话还是加一些正则化的方法来降低敏感度吧。
+
+这个测试结果和MixAug的结论有很大差别，MixAug的测试结果是0.1更好；当然，MixAug测试的是ResNet50，模型结构变了结果发生变化也正常。
+
+还有一种可能性是，我只用的CrossEntroy，是不是需要用SoftTarget或者LabelSmoothing？
+
+![CLSFER_NonMulti_Mixup](D:\College\projects\Test Models\results\CLSFER_NonMulti_Mixup.png)
 
 
 
-# Weight decay验证
+## depth 验证
+
+CLS FER这边没做过depth + LR的验证，测试一下吧。
 
 
 
-# drop attn验证
+## Weight decay验证
+
+上次weight decay的效果并不是很理想，我认为可能是weight decay和LR关系比较大的原因，所以这次将decay和LR一起调参？
+
+
+
+## drop attn验证
+
+
+
+## stage验证
+
+尝试用一下stage3的特征，与stage4的特征进行对比。
+
+
+
+
+
+# 下一步工作
+
+目前的实验结果，能够支撑CLS Block的可行性，我们可以适当画个图来说明这个结构。
+
+下一步肯定是要向SOTA靠拢的，首先要再次确定下SOTA的范围，跑一部分有源码的SOTA，比较一下效果？
+
+但怎么在CLS Block的基础上进一步改进有点没头绪，目前已经知道的可能包括：Multi Scale，加landmark，进一步压缩模型。
+
+我觉得首先还是得先往SOTA的表现靠拢，然后再考虑下一步压缩？
+
+嗯，那就按下面这个顺序来处理吧：
+
+1. 列SOTA表，找一下POSTER之后，23年有没有进一步提升表现的论文（有源码优先）
+2. 梳理这些SOTA的结构，考虑我们架构如果向这些SOTA靠拢的话，能不能区分出模型差异。
+3. 寻找近两年的新hybrid ViT架构，尝试将CLS Token融合进去。
+
+从另一方面来说，当前面临的问题还是属于解释角度的问题，需要找到一个不错的解释角度来向SOTA架构靠拢。
+
+我需要一轮新的知识突破才能打破目前的困境，当前的困境很大程度上还是来自于对SOTA的发展路径、性能提升点不够熟悉，以及对各种trick的了解不够充分，得进一步加深对FER领域和模型架构的理解才行。
+
+
+
+## SOTA 表
+
+
 
 
 

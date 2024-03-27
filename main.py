@@ -133,6 +133,9 @@ def main():
     total_time = time.time() - start_time
     logger.info(f'Total training time: {str(datetime.timedelta(seconds=int(total_time)))}')
     
+    # release cache
+    torch.cuda.empty_cache()
+    
     wandb.finish()
     
 def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_scheduler, epoch, mix_fn, logger):
