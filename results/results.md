@@ -110,7 +110,7 @@ CLSFERBaseline_depth8_SearchLR
 | 3.20E-06 | Baseline | 83.605     |
 |          | CLSFER   | **85.398** |
 
-好像用CLSBlock效果更好一些？
+为什么用CLSBlock效果更好一些？
 
 
 
@@ -157,6 +157,18 @@ CLSFERBaseline_depth8_SearchLR
 
 CLS FER这边没做过depth + LR的验证，测试一下吧。
 
+![CLSFER_NonMulti_SearchDepth](D:\College\projects\Test Models\results\CLSFER_NonMulti_SearchDepth.png)
+
+整体上来看，还是深一点表现更好。那就还是用depth 8
+
+
+
+## stage验证
+
+尝试用一下stage3的特征，与stage4的特征进行对比。
+
+
+
 
 
 ## Weight decay验证
@@ -169,9 +181,7 @@ CLS FER这边没做过depth + LR的验证，测试一下吧。
 
 
 
-## stage验证
 
-尝试用一下stage3的特征，与stage4的特征进行对比。
 
 
 
@@ -179,7 +189,7 @@ CLS FER这边没做过depth + LR的验证，测试一下吧。
 
 # 下一步工作
 
-目前的实验结果，能够支撑CLS Block的可行性，我们可以适当画个图来说明这个结构。
+目前的实验结果，能够支撑CLS Block的可行性，我们可以适当画个图来说明这个结构。但为啥效果反而高了一些？
 
 下一步肯定是要向SOTA靠拢的，首先要再次确定下SOTA的范围，跑一部分有源码的SOTA，比较一下效果？
 

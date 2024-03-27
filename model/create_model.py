@@ -3,6 +3,7 @@ from .repvggplus import create_RepVGGplus_by_name
 from .iresnet import iresnet50
 from .baseline import Baseline
 from .cls_vit import NonMultiCLSFER
+from .cls_vit_stage3 import NonMultiCLSFER_stage3
 
 def create_model(args, config):
     model = None
@@ -16,6 +17,9 @@ def create_model(args, config):
     elif config.MODEL.ARCH == 'NonMultiCLSFER':
         model = NonMultiCLSFER(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
                                attn_drop=config.MODEL.ATTN_DROP,)
+    elif config.MODEL.ARCH == 'NonMultiCLSFER_stage3':
+        model = NonMultiCLSFER_stage3(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
+                                      attn_drop=config.MODEL.ATTN_DROP,)
         
     return model
 

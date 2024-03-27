@@ -67,6 +67,21 @@ class NonMultiCLSTests(unittest.TestCase):
     
     def test_flops(self):
         throughput(self.model, self.train_loader, logger)
+        
+class Stage3Tests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.model = create_model(args, config)
+        self.model.cuda()
+        self.train_loader, self.val_loader, self.mix_fn = build_loader(config)
+        self.input = torch.rand((1, 3, 224, 224)).cuda()
+    
+    def test_running(self):
+        out = self.model(self.input)
+        for images, targets in self.train_loader:
+            images = images.cuda()
+            out = self.model(images)
+            break
 
 class IrBackTests(unittest.TestCase):
     @classmethod
