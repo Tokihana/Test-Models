@@ -1,23 +1,22 @@
-# RAF-DB_CLSFERNonMultiStage3.yaml
+# FERPlus_CLSFERBaseline.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'CLSFERNonMultiStage3_SearchAttnDrop'
-    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERNonMultiStage3_SearchAttnDrop'
+    EXPERIMENT_NAME: 'CLSFERBaseline_FERPlus_LR'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_CLSFERBaseline_FERPlus_LR'
     SAVE_FREQ: 30
     
 DATA:
     BATCH_SIZE: 256
-    DATASET: 'RAF-DB'
-    DATA_PATH: '../autodl-tmp/RAF-DB'
+    DATASET: 'FERPlus'
+    DATA_PATH: '../autodl-tmp/FERPlus'
     
 MODEL:
-    ARCH: 'NonMultiCLSFER_stage3'
+    ARCH: 'CLSFERBaseline_stage3'
     DEPTH: 8
-    
     
 TRAIN:
     EPOCHS: 60
-    BASE_LR: 1e-5
+    BASE_LR: 5e-5
     
     OPTIMIZER:
         NAME: 'Adam'

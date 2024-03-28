@@ -2,6 +2,7 @@ import torch
 from .repvggplus import create_RepVGGplus_by_name
 from .iresnet import iresnet50
 from .baseline import Baseline
+from .baseline_stage3 import Baseline_stage3
 from .cls_vit import NonMultiCLSFER
 from .cls_vit_stage3 import NonMultiCLSFER_stage3
 
@@ -14,6 +15,9 @@ def create_model(args, config):
     elif config.MODEL.ARCH == 'CLSFERBaseline':
         model = Baseline(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
                         attn_drop=config.MODEL.ATTN_DROP, )
+    elif config.MODEL.ARCH == 'CLSFERBaseline_stage3':
+        model = Baseline_stage3(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
+                         attn_drop=config.MODEL.ATTN_DROP,)
     elif config.MODEL.ARCH == 'NonMultiCLSFER':
         model = NonMultiCLSFER(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
                                attn_drop=config.MODEL.ATTN_DROP,)
