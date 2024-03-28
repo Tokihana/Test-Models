@@ -36,29 +36,29 @@ def build_loader(config):
     return train_loader, val_loader, cutmix_or_mixup
 
 def build_dataset(config):
-    # RAF-DB
+    img_size = config.DATA.IMG_SIZE
     if config.DATA.DATASET == 'RAF-DB':
-        train_transform, val_transform = _get_rafdb_transform()
+        train_transform, val_transform = _get_rafdb_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'AffectNet_7':
-        train_transform, val_transform = _get_affectnet_transform()
+        train_transform, val_transform = _get_affectnet_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'AffectNet_8':
-        train_transform, val_transform = _get_affectnet_transform()
+        train_transform, val_transform = _get_affectnet_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'FERPlus':
-        train_transform, val_transform = _get_affectnet_transform()
+        train_transform, val_transform = _get_affectnet_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'Training'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'PublicTest'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'MiniTest': # minitest is a very, very small subset of RAF-DB
-        train_transform, val_transform = _get_rafdb_transform()
+        train_transform, val_transform = _get_rafdb_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
@@ -66,9 +66,9 @@ def build_dataset(config):
         raise NotImplementError("DATASET NOT SUPPORTED")
     return train_dataset, val_dataset, nb_classes
 
-def _get_rafdb_transform():
+def _get_rafdb_transform(img_size=224):
     train_transform = v2.Compose([
-        v2.Resize((224, 224)), # Resize() only accept PIL or Tensor type images
+        v2.Resize((img_size, img_size)), # Resize() only accept PIL or Tensor type images
         v2.RandomHorizontalFlip(),
         #v2.ToTensor(), # warned by Torch: ToTensor() will be removed in a future release, use [v2.ToImage(), v2.ToDtype(torch.float32, scale=True)] instead
                         # if the param scale is True, the range of the inputs will be normalized
@@ -79,37 +79,37 @@ def _get_rafdb_transform():
         v2.RandomErasing(scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
-        v2.Resize((224, 224)),
+        v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
     ])
     return train_transform, val_transform
 
-def _get_affectnet_transform():
+def _get_affectnet_transform(img_size=224):
     train_transform = v2.Compose([
-        v2.Resize((224, 224)),
+        v2.Resize((img_size, img_size)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
         v2.RandomErasing(scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
-        v2.Resize((224, 224)),
+        v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
     ])
     return train_transform, val_transform
 
-def _get_ferplus_transform():
+def _get_ferplus_transform(img_size=224):
     train_transform = v2.Compose([
-        v2.Resize((112, 112)),
+        v2.Resize((img_size, img_size)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
         v2.RandomErasing(scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
-        v2.Resize((112, 112)),
+        v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
     ])
