@@ -241,9 +241,15 @@ FER领域，表情相关和表情无关信息最早是谁提的。
 
 # FERPlus测试
 
+首先修正了FERPlus的转存方法，之前存的是png，位深32，FERPlus本来就是灰度图，所以转存成jpg了。
+
+对应的文件为FERplus_split.py
+
 由于Baseline_Stage3跑不了256的batch size，调整为224
 
+顺带调整了输入的img size为112，SOTA也是直接interploate到112的。主要是FERPlus数据本来就不大（48x48），先升维再降维不合理。这样的话，ir50中的conv1就不用设stride2了，改回stride1。
 
+FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测试的话，估计要跑8h左右。
 
 
 
