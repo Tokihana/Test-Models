@@ -1,4 +1,4 @@
-# RAF-DB_CLSFERBaseline.yaml
+# RAF-DB_CLSFERBaseline_Opt.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'CLSFERBaseline_depth2_WithOutDecay_200epoch'

@@ -1,4 +1,4 @@
-# RAF-DB_CLSFERBaseline.yaml
+# RAF-DB_CLSFERNonMulti.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'CLSFERNonMulti_SearchMixupAlpha'

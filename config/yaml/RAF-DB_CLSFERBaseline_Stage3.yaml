@@ -1,4 +1,4 @@
-# RAF-DB_CLSFERBaseline.yaml
+# RAF-DB_CLSFERBaseline_Stage3.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'CLSFERBaseline_SearchDepth&LR'
