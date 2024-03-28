@@ -183,7 +183,9 @@ CLS FER这边没做过depth + LR的验证，测试一下吧。
 
 ## drop attn验证
 
+drop attn的效果不是很稳定的样子，后面需要提精度的时候可以尝试用一用
 
+![CLSFER_NonMulti_Stage3_attndrop](D:\College\projects\Test Models\results\CLSFER_NonMulti_Stage3_attndrop.png)
 
 
 

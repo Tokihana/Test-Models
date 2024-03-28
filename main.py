@@ -239,8 +239,10 @@ def validate(config, model, data_loader, logger):
 def _test_lr():
     #lr_list = [0.1**i for i in range(1, 8)]
     lr_list = (0.1**torch.linspace(4.5, 5.5, 7)).tolist()
+    check_path = config.SYSTEM.CHECKPOINT
     for lr in lr_list:
         config.defrost()
+        config.SYSTEM.CHECKPOINT = f'{check_path}_lr{str(lr)}'
         config.TRAIN.BASE_LR = lr
         config.freeze()
         main()

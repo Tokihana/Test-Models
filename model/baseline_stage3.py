@@ -10,7 +10,7 @@ class Baseline_stage3(nn.Module):
     def __init__(self,
                  img_size: int=224,
                  embed_len: int=49,
-                 embed_dim: int=1024
+                 embed_dim: int=1024,
                  num_heads: int = 8,
                  mlp_ratio: float = 4.,
                  qkv_bias=False,

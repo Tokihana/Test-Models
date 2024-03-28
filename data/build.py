@@ -54,8 +54,8 @@ def build_dataset(config):
         nb_classes = 8
     elif config.DATA.DATASET == 'FERPlus':
         train_transform, val_transform = _get_affectnet_transform()
-        train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
-        val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
+        train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'Training'), train_transform)
+        val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'PublicTest'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'MiniTest': # minitest is a very, very small subset of RAF-DB
         train_transform, val_transform = _get_rafdb_transform()

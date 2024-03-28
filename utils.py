@@ -40,8 +40,10 @@ def save_checkpoint(config, model, epoch, max_acc, optimizer, lr_scheduler, logg
         'epoch': epoch,
         'config': config,
     }
+    if not os.path.exists(config.SYSTEM.CHECKPOINT):
+        os.makedirs(config.SYSTEM.CHECKPOINT)
     if is_best:
-        best_path = os.path.join(config.SYSTEM.CHECKPOINT, 'best.pth')
+        best_path = os.path.join(config.SYSTEM.CHECKPOINT, f'best.pth')
         torch.save(states, best_path)
         logger.info(f'Save checkpoint to {best_path}')
     else:
