@@ -215,7 +215,33 @@ drop attn的效果不是很稳定的样子，后面需要提精度的时候可�
 
 
 
-## SOTA 表
+## 
+
+# 组会讨论
+
+ViT的论文有没有说明CLS Token和feature token具体包含什么信息？有没有说过。
+
+FER领域，表情相关和表情无关信息最早是谁提的。
+
+
+
+1. 其他数据集上也出现这种情况，证明结果有效性。
+2. 传统ViT会分CLS 和feature，分别代表什么信息。-> ViT最开始的论文，立论基础
+3. CLS token反映了哪些信息，feature token反映了哪些信息。-> feature token**对表情识别没有用**，**该怎么证明**。
+4. 精度下一步可以做着用。
+
+
+
+做哪些实验：
+
+1. baseline&CLS在其他数据集->证明现象是普遍的。
+2. 如果证明是普遍现象，想办法证明feature token没有用。
+
+
+
+# FERPlus测试
+
+由于Baseline_Stage3跑不了256的batch size，调整为224
 
 
 

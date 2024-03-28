@@ -102,14 +102,14 @@ def _get_affectnet_transform():
 
 def _get_ferplus_transform():
     train_transform = v2.Compose([
-        v2.Resize((224, 224)),
+        v2.Resize((112, 112)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
         v2.RandomErasing(scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
-        v2.Resize((224, 224)),
+        v2.Resize((112, 112)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
     ])
