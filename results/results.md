@@ -167,7 +167,11 @@ CLS FER这边没做过depth + LR的验证，测试一下吧。
 
 尝试用一下stage3的特征，与stage4的特征进行对比。
 
+参照POSTER的实现，从[14, 14, 256]的特征图直接view到[49, 1024]的特征图
 
+![CLSFER_NonMulti_Stage3](D:\College\projects\Test Models\results\CLSFER_NonMulti_Stage3.png)
+
+从结果上来看，使用stage3的效果会更好一些。
 
 
 

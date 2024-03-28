@@ -17,7 +17,7 @@ MODEL:
     
 TRAIN:
     EPOCHS: 60
-    BASE_LR: 3.5e-5
+    BASE_LR: 1e-5
     
     OPTIMIZER:
         NAME: 'Adam'

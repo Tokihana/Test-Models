@@ -18,7 +18,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/RAF-DB_CLSFERNonMulti.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_CLSFERNonMultiStage3.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -296,6 +296,14 @@ def _test_mixup():
         config.AUG.MIXUP = alpha
         config.freeze()
         main()
+        
+def _test_drop_attn():
+    drops = [0., 0.1, 0.2, 0.4, 0.6, 0.8]
+    for drop in drops:
+        config.defrost()
+        config.MODEL.ATTN_DROP = drop
+        config.freeze()
+        main()
 
     
 if __name__ == '__main__':
@@ -304,4 +312,6 @@ if __name__ == '__main__':
     # main()
     #_test_lr()
     #_test_gamma()     
-    _test_mixup()
+    #_test_mixup()
+    _test_drop_attn()
+    
