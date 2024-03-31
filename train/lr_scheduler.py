@@ -45,7 +45,8 @@ def build_scheduler(config, optimizer, n_iter_per_epoch):
                                                                   mode='max', # max acc
                                                                   factor=config.TRAIN.LR_SCHEDULER.REDUCE_FACTOR, # reduce lr by factor, default 2
                                                                   patience=15, # assume initial lr is 1e-4, aimed to 1e-5 at 60 epoch
-                                                                  threshold=1e-4
+                                                                  threshold=1e-4,
+                                                                  min_lr=config.TRAIN.MIN_LR,
                                                                  )
 
     return lr_scheduler

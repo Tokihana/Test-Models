@@ -326,6 +326,7 @@ if __name__ == '__main__':
     for arch in archs:
         config.defrost()
         config.MODEL.ARCH = arch
+        config.SYSTEM.CHECKPOINT = f'{config.SYSTEM.CHECKPOINT}_{arch}'
         config.freeze()
         main()
     

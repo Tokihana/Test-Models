@@ -91,7 +91,7 @@ _C.TRAIN.BASE_LR = 3.5e-5
 # warmup lr
 _C.TRAIN.WARMUP_LR = 0.0
 # min lr
-_C.TRAIN.MIN_LR = 0
+_C.TRAIN.MIN_LR = 0.
 # resume checkpoint path
 _C.TRAIN.RESUME = ''
 
