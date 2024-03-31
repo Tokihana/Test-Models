@@ -122,7 +122,7 @@ class NonMultiCLSFER_stage3(nn.Module):
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
         print(f'Miss: {miss},\t Unexcept: {unexcepted}')
         del checkpoint, miss, unexcepted
-        self.ir_layer = nn.Conv1d(embed_len, embed_len, kernel_size=2, stride=2,)
+        
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
         self.blocks = nn.Sequential(*[

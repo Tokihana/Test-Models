@@ -9,6 +9,7 @@ DATA:
     BATCH_SIZE: 256
     DATASET: 'RAF-DB'
     DATA_PATH: '../autodl-tmp/RAF-DB'
+    IMG_SIZE: 112
     
 MODEL:
     ARCH: 'CLSFERBaseline_stage3'
