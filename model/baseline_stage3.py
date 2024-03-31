@@ -4,7 +4,7 @@ import torch.nn as nn
 from timm.models.vision_transformer import Block
 from timm.layers import LayerNorm
 
-from .ir50_stage3 import iresnet50
+from .ir50_stage3 import iresnet50_stage3
 
 class Baseline_stage3(nn.Module):
     def __init__(self,
@@ -40,8 +40,7 @@ class Baseline_stage3(nn.Module):
         # get features
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
-        #x_embed = x_ir.flatten(2).transpose(-2, -1)
-        x_embed = self.ir_layer(x_ir.view(-1, 49, 1024)) # poster-like embed
+        x_embed = x_ir.flatten(2).transpose(-2, -1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)

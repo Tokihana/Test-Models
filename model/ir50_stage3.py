@@ -99,11 +99,11 @@ class IResNet(nn.Module):
                                        layers[2],
                                        stride=2,
                                        dilate=replace_stride_with_dilation[1])
-        #self.layer4 = self._make_layer(block,
-        #                               512,
-        #                               layers[3],
-        #                               stride=2,
-        #                               dilate=replace_stride_with_dilation[2])
+        self.layer4 = self._make_layer(block,
+                                       512,
+                                       layers[3],
+                                       stride=2,
+                                       dilate=replace_stride_with_dilation[2])
         # output layer
         #self.bn2 = nn.BatchNorm2d(512 * block.expansion, eps=1e-05,)
         #self.dropout = nn.Dropout(p=dropout, inplace=True)
@@ -158,7 +158,7 @@ class IResNet(nn.Module):
             x = self.layer1(x)
             x = self.layer2(x)
             x = self.layer3(x)
-            #x = self.layer4(x)
+            x = self.layer4(x)
             #x = self.bn2(x4)
             #x = torch.flatten(x, 1)
             #x = self.dropout(x)
@@ -186,6 +186,10 @@ def iresnet34(pretrained=False, progress=True, **kwargs):
 
 def iresnet50(pretrained=False, progress=True, **kwargs):
     return _iresnet('iresnet50', IBasicBlock, [3, 4, 14, 3], pretrained,
+                    progress, **kwargs)
+
+def iresnet50_stage3(pretrained=False, progress=True, **kwargs):
+    return _iresnet('iresnet50', IBasicBlock, [3, 4, 14, 1], pretrained,
                     progress, **kwargs)
 
 
