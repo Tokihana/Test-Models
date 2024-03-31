@@ -25,7 +25,7 @@ TRAIN:
         
     LR_SCHEDULER:
         NAME: 'reduce'
-        FACTOR: 0.5
+        REDUCE_FACTOR: 0.5
         
     CRITERION:
         NAME: 'CrossEntropy'
