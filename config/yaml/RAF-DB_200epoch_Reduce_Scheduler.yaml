@@ -1,7 +1,7 @@
 # RAF-DB_200epoch_Reduce_Scheduler.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'CLSFERBaseline_200epoch_Reduce_Scheduler'
+    EXPERIMENT_NAME: 'CLSFERBaseline_Reduce_Scheduler'
     EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_Reduce_Scheduler'
     SAVE_FREQ: 30
     
