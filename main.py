@@ -310,14 +310,21 @@ def _test_drop_attn():
         config.MODEL.ATTN_DROP = drop
         config.freeze()
         main()
+        
 
     
 if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
     # main()
-    _test_lr()
+    #_test_lr()
     #_test_gamma()     
     #_test_mixup()
     #_test_drop_attn()
+    archs = ['NonMultiCLSFER_stage3', 'CLSFERBaseline_stage3']
+    for arch in archs:
+        config.defrost()
+        config.MODEL.ARCH = arch
+        config.freeze()
+        main()
     

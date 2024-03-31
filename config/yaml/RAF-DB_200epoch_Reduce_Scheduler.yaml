@@ -1,0 +1,33 @@
+# RAF-DB_200epoch_Reduce_Scheduler.yaml
+SYSTEM:
+    PROJECT_NAME: 'CLSFERBaseline'
+    EXPERIMENT_NAME: 'CLSFERBaseline_200epoch_Reduce_Scheduler'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_Reduce_Scheduler'
+    SAVE_FREQ: 30
+    
+DATA:
+    BATCH_SIZE: 256
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../autodl-tmp/RAF-DB'
+    
+MODEL:
+    ARCH: 'CLSFERBaseline_stage3'
+    DEPTH: 8
+    
+TRAIN:
+    EPOCHS: 200
+    BASE_LR: 1e-4
+    
+    OPTIMIZER:
+        NAME: 'Adam'
+        EPS: 1e-8
+        BETAS: (0.9, 0.999)
+        
+    LR_SCHEDULER:
+        NAME: 'reduce'
+        FACTOR: 0.5
+        
+    CRITERION:
+        NAME: 'CrossEntropy'
+    
+    
