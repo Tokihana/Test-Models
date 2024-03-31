@@ -21,7 +21,7 @@ class Baseline_stage3(nn.Module):
                  num_classes: int = 7,
                  norm_layer: nn.Module = LayerNorm):
         super(Baseline_stage3, self).__init__()
-        self.irback = iresnet50(num_features=num_classes)
+        self.irback = iresnet50_stage3(num_features=num_classes)
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
         print(f'Miss: {miss},\t Unexcept: {unexcepted}')
