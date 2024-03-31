@@ -106,8 +106,7 @@ class NonMultiCLSFER_stage3(nn.Module):
     def __init__(self,
                  img_size: int=224,
                  embed_len: int=49,
-                 #embed_dim: int=512,
-                 embed_dim: int=1024,
+                 embed_dim: int=512,
                  num_heads: int = 8,
                  mlp_ratio: float = 4.,
                  qkv_bias=False,
@@ -123,6 +122,7 @@ class NonMultiCLSFER_stage3(nn.Module):
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
         print(f'Miss: {miss},\t Unexcept: {unexcepted}')
         del checkpoint, miss, unexcepted
+        self.ir_layer = nn.Conv1d(embed_len, embed_len, kernel_size=2, stride=2,)
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
         self.blocks = nn.Sequential(*[
@@ -137,7 +137,7 @@ class NonMultiCLSFER_stage3(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         #x_embed = x_ir.flatten(2).transpose(-2, -1)
-        x_embed = x_ir.view(-1, 49, 1024) # poster-like embed
+        x_embed = self.ir_layer(x_ir.view(-1, 49, 1024)) # poster-like embed
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
