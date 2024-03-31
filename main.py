@@ -321,7 +321,7 @@ if __name__ == '__main__':
     #_test_gamma()     
     #_test_mixup()
     #_test_drop_attn()
-    archs = ['NonMultiCLSFER_stage3', 'CLSFERBaseline_stage3']
+    archs = ['NonMultiCLSFER', 'CLSFERBaseline']
     for arch in archs:
         config.defrost()
         config.MODEL.ARCH = arch

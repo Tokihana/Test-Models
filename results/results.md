@@ -251,5 +251,13 @@ FER领域，表情相关和表情无关信息最早是谁提的。
 
 FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测试的话，估计要跑8h左右。
 
+![FERPlus_SearchLR&Arch](D:\College\projects\Test Models\results\FERPlus_SearchLR&Arch.png)
 
+确认了一下测试时间太长的原因：stage3不应使用view，会占用大量开销；
+
+已经调整了stage3的实现，修正为使用ir50自己的block，只不过把layer4的深度调整为1，只留一层降维。
+
+
+
+# 增加Reduce LR，使用调整后的stage3跑个200epoch
 
