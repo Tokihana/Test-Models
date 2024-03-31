@@ -99,11 +99,11 @@ class IResNet(nn.Module):
                                        layers[2],
                                        stride=2,
                                        dilate=replace_stride_with_dilation[1])
-        self.layer4 = self._make_layer(block,
-                                       512,
-                                       layers[3],
-                                       stride=2,
-                                       dilate=replace_stride_with_dilation[2])
+        #self.layer4 = self._make_layer(block,
+        #                               512,
+        #                               layers[3],
+        #                               stride=2,
+        #                               dilate=replace_stride_with_dilation[2])
         # output layer
         #self.bn2 = nn.BatchNorm2d(512 * block.expansion, eps=1e-05,)
         #self.dropout = nn.Dropout(p=dropout, inplace=True)
