@@ -40,6 +40,13 @@ def build_scheduler(config, optimizer, n_iter_per_epoch):
         )
     elif config.TRAIN.LR_SCHEDULER.NAME == 'exponential':
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=config.TRAIN.LR_SCHEDULER.GAMMA)
+    elif config.TRAIN.LR_SCHEDULER.NAME == 'reduce':
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+                                                                  mode='max', # max acc
+                                                                  factor=config.TRAIN.LR_SCHEDULER.REDUCE_FACTOR, # reduce lr by factor, default 2
+                                                                  patience=15, # assume initial lr is 1e-4, aimed to 1e-5 at 60 epoch
+                                                                  threshold=1e-4
+                                                                 )
 
     return lr_scheduler
 
