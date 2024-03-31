@@ -184,6 +184,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         
         if idx % config.SYSTEM.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
+            wandb.log({'running lr':lr})
             memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
             etas = batch_time.avg*(num_steps - idx) # estimated time of arrival
             logger.info(

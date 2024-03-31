@@ -259,5 +259,6 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 
 
 
-# 增加Reduce LR，使用调整后的stage3跑个200epoch
+# 增加Reduce LR，跑个200epoch
 
+对比4种架构：NonMulti, Baseline, NonMulti_stage3, Baseline_stage3
