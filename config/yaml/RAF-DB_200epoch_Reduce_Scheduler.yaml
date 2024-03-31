@@ -30,5 +30,8 @@ TRAIN:
         
     CRITERION:
         NAME: 'CrossEntropy'
+        
+AUG:
+    MIXUP: 0.
     
     
