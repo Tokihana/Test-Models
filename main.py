@@ -18,7 +18,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/RAF-DB_200epoch_Reduce_Scheduler.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/AffectNet7_SearchLR.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -63,6 +63,7 @@ def main():
             ## lr scheduler
             "scheduler": config.TRAIN.LR_SCHEDULER.NAME,
             "scheduler gamma": config.TRAIN.LR_SCHEDULER.GAMMA,
+            "reduce factor": config.TRAIN.LR_SCHEDULER.REDUCE_FACTOR,
             # augment
             "mixup alpha": config.AUG.MIXUP,
         }
@@ -242,7 +243,7 @@ def validate(config, model, data_loader, logger):
     return acc_avg.avg,  loss_avg.avg
                   
 def _test_lr():
-    lr_list = [0.1**i for i in range(3, 8)]
+    lr_list = [0.1**i for i in range(4, 8)]
     #lr_list = (0.1**torch.linspace(4.5, 5.5, 7)).tolist()
     check_path = config.SYSTEM.CHECKPOINT
     for lr in lr_list:

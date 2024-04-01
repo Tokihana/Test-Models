@@ -25,6 +25,8 @@ TRAIN:
         EPS: 1e-8
         BETAS: (0.9, 0.999)
         
+    LR_SCHEDULER:
+        NAME: 'None'
         
     CRITERION:
         NAME: 'CrossEntropy'
