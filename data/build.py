@@ -11,11 +11,12 @@ def build_loader(config):
     config.freeze()
     train_loader = torch.utils.data.DataLoader(train_dataset,
                                                sampler=ImbalancedDatasetSampler(train_dataset),
-                                               # shuffle=True, # may not need to specified when use sampler
+                                               # shuffle=True, # not need to specified when use sampler
                                                batch_size=config.DATA.BATCH_SIZE,
                                                num_workers=config.DATA.NUM_WORKERS,
                                                pin_memory=config.DATA.PIN_MEMORY,
-                                               drop_last=True)
+                                               #drop_last=True)
+                                               drop_last=False) # may drop imbalanced class when dataset is imbalanced
     val_loader = torch.utils.data.DataLoader(val_dataset,
                                              shuffle=False,
                                              batch_size=config.DATA.BATCH_SIZE,
