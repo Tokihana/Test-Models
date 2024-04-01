@@ -242,8 +242,8 @@ def validate(config, model, data_loader, logger):
     return acc_avg.avg,  loss_avg.avg
                   
 def _test_lr():
-    #lr_list = [0.1**i for i in range(1, 8)]
-    lr_list = (0.1**torch.linspace(4.5, 5.5, 7)).tolist()
+    lr_list = [0.1**i for i in range(3, 8)]
+    #lr_list = (0.1**torch.linspace(4.5, 5.5, 7)).tolist()
     check_path = config.SYSTEM.CHECKPOINT
     for lr in lr_list:
         config.defrost()
@@ -322,11 +322,11 @@ if __name__ == '__main__':
     #_test_gamma()     
     #_test_mixup()
     #_test_drop_attn()
-    archs = ['NonMultiCLSFER', 'CLSFERBaseline']
+    archs = ['NonMultiCLSFER_stage3', 'CLSFERBaseline_stage3']
     for arch in archs:
         config.defrost()
         config.MODEL.ARCH = arch
         config.SYSTEM.CHECKPOINT = f'{config.SYSTEM.CHECKPOINT}_{arch}'
         config.freeze()
-        main()
+        _test_lr()
     
