@@ -19,10 +19,16 @@ def create_model(args, config):
         model = Baseline_stage3(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
                          attn_drop=config.MODEL.ATTN_DROP,)
     elif config.MODEL.ARCH == 'NonMultiCLSFER':
-        model = NonMultiCLSFER(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
+        model = NonMultiCLSFER(img_size=config.DATA.IMG_SIZE, 
+                               num_classes=config.MODEL.NUM_CLASS, 
+                               depth=config.MODEL.DEPTH,
+                               mlp_ratio=config.MODEL.MLP_RATIO,
                                attn_drop=config.MODEL.ATTN_DROP,)
     elif config.MODEL.ARCH == 'NonMultiCLSFER_stage3':
-        model = NonMultiCLSFER_stage3(num_classes=config.MODEL.NUM_CLASS, depth=config.MODEL.DEPTH, mlp_ratio=config.MODEL.MLP_RATIO,
+        model = NonMultiCLSFER_stage3(img_size=config.DATA.IMG_SIZE,
+                                      num_classes=config.MODEL.NUM_CLASS, 
+                                      depth=config.MODEL.DEPTH, 
+                                      mlp_ratio=config.MODEL.MLP_RATIO,
                                       attn_drop=config.MODEL.ATTN_DROP,)
         
     return model

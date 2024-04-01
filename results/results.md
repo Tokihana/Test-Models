@@ -262,3 +262,22 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 # 增加Reduce LR，跑个200epoch
 
 对比4种架构：NonMulti, Baseline, NonMulti_stage3, Baseline_stage3
+
+![RAF-DB_200epoch_reduce](D:\College\projects\Test Models\results\RAF-DB_200epoch_reduce.png)
+
+可以看出来，使用CLS的话，精度还是会差一些的，另外stage3确实效果更优；这里没用mixup，用了的话效果可能会更好一些。
+
+
+
+# FERPlus跑200epoch
+
+有点困难，Baseline的loss经常会变NaN，目前已经将初始学习率折半两次了。但CLS block的实现没这个现象。这是不是也是可以寻找解释的？
+
+> 从目前的经验来看，一种可行的解释方向是，排除了feature token的干扰后，虽然会有一定程度的信息损失，但模型的收敛性得到了提升。
+>
+> 有没有办法令鱼与熊掌兼得？即前半部分保持用feature token，后半部分使用CLS token？
+>
+> 下一步如果做AffectNet的运行测试，估计还是得继续降LR
+
+另一方面，从目前保有的实验结果来看，如果loss没有NaN的话，那么Baseline的结果是会好一些的。
+
