@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 
 from timm.models.vision_transformer import Block
-from timm.layers import LayerNorm
 
 from .ir50_stage3 import iresnet50_stage3
 
@@ -19,7 +18,7 @@ class Baseline_stage3(nn.Module):
                  drop_path: float = 0.,
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
-                 norm_layer: nn.Module = LayerNorm):
+                 norm_layer: nn.Module = nn.LayerNorm):
         super(Baseline_stage3, self).__init__()
         self.irback = iresnet50_stage3(num_features=num_classes)
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
