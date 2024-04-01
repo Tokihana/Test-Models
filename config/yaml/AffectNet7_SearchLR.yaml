@@ -4,6 +4,7 @@ SYSTEM:
     EXPERIMENT_NAME: 'CLSFERBaseline_SearchLR_AffectNet7'
     EXPERIMENT_PATH: '../autodl-tmp/results/CLSFER_SearchLR_AffectNet7'
     SAVE_FREQ: 30
+    PRINT_FREQ: 200
     
 DATA:
     BATCH_SIZE: 256

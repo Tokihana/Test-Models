@@ -282,3 +282,5 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 另一方面，从目前保有的实验结果来看，如果loss没有NaN的话，那么Baseline的结果是会好一些的。
 
 学习率折半两次还是会变NaN，但每次折半变NaN的时间都会延后一些。从目前实验结果来看，Baseline会好一些。
+
+![FERPlus_200epoch](D:\College\projects\Test Models\results\FERPlus_200epoch.png)
