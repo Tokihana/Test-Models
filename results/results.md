@@ -306,4 +306,15 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 
 2. 启用baseline的qk_norm
 
-3. 自己实现一遍block
+   这个方法似乎是有效的，等跑完200epoch看看结果吧。预计还需要再跑个2.5e-5学习率的结果。
+
+   从qk_norm原论文来看，在qk上加norm能够降低softmax饱和的倾向，减少梯度问题。
+
+3. 自己实现一遍block？
+
+
+
+# 跑个AffectNetLR
+
+因为跑的很慢，所以首先10epoch确定了一个小的LR范围，目前来看1e-5和1e-6都还不错，后续可能还是会用1e-6，因为FERPlus在2.5e-5效果更好一些，AffectNet肯定是要再小一点的。
+

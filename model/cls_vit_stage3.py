@@ -10,14 +10,18 @@ class CLSAttention(nn.Module):
     def __init__(self, dim: int, 
                 num_heads: int=8,
                 qkv_bias: bool=False,
+                qk_norm: bool=False,
                 attn_drop: float=0.,
-                proj_drop: float=0.,):
+                proj_drop: float=0.,
+                norm_layer: nn.Module=nn.LayerNorm,):
         super(CLSAttention, self).__init__()
         self.num_heads = num_heads
         head_dim: int = dim // num_heads
         self.scale: float = head_dim ** -0.5
         
         self.wq, self.wk, self.wv = nn.Linear(dim, dim, bias=qkv_bias), nn.Linear(dim, dim, bias=qkv_bias), nn.Linear(dim, dim, bias=qkv_bias)
+        self.q_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
+        self.k_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
         self.attn_drop = nn.Dropout(attn_drop)
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
@@ -31,6 +35,8 @@ class CLSAttention(nn.Module):
         k =  self.wk(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
         # BNC -> BNH(C/H) -> BHN(C/H)
         v = self.wv(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
+        # qk norm
+        q, k = self.q_norm(q), self.k_norm(k)
         
         # attn: BH1(C/H) @ BH(C/H)N -> BH1N
         attn = q @ k.transpose(-2, -1) / self.scale
