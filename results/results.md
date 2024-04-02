@@ -179,6 +179,10 @@ CLS FER这边没做过depth + LR的验证，测试一下吧。
 
 上次weight decay的效果并不是很理想，我认为可能是weight decay和LR关系比较大的原因，所以这次将decay和LR一起调参？
 
+目前改用了reduce on plateau，从观察来看，decay曲线确实比较接近exponential。
+
+调整初始LR 对模型效果确实会存在影响，也许需要跑一个实验来找到合适的组合。
+
 
 
 ## drop attn验证
@@ -235,7 +239,7 @@ FER领域，表情相关和表情无关信息最早是谁提的。
 做哪些实验：
 
 1. baseline&CLS在其他数据集->证明现象是普遍的。
-2. 如果证明是普遍现象，想办法证明feature token没有用。
+2. 如果证明是普遍现象，想办法证明feature token没有用。**修正：不需要证明没有用**，因为现有实验证据无法说明没有用（Baseline还是比单用CLS token高一些的），所以只需要论证CLS token已经足够使用即可。
 
 
 
@@ -245,7 +249,7 @@ FER领域，表情相关和表情无关信息最早是谁提的。
 
 对应的文件为FERplus_split.py
 
-由于Baseline_Stage3跑不了256的batch size，调整为224
+由于Baseline_Stage3跑不了256的batch size，调整为224，**后面发现是embed_dim的问题，设置1024有些太大了，POSTER中是做了一次linear映射，我们在这里直接保留了resnet layer4的第一个降维block**
 
 顺带调整了输入的img size为112，SOTA也是直接interploate到112的。主要是FERPlus数据本来就不大（48x48），先升维再降维不合理。这样的话，ir50中的conv1就不用设stride2了，改回stride1。
 
@@ -284,3 +288,10 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 学习率折半两次还是会变NaN，但每次折半变NaN的时间都会延后一些。从目前实验结果来看，Baseline会好一些。
 
 ![FERPlus_200epoch](D:\College\projects\Test Models\results\FERPlus_200epoch.png)
+
+对于变NaN这个问题，目前已知的信息：
+
+- 不是初始epoch就变，而是在训练several epoch后，突然跳变为NaN
+- 调小学习率能够延缓变NaN的epoch数
+
+我怀疑是timm的LayerNorm实现不太行，所以改了nn.LayerNorm，到时再测测吧

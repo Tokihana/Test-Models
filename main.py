@@ -126,7 +126,7 @@ def main():
         if val_loader is not None:
             acc, loss = validate(config, model, val_loader, logger)
             max_acc = max(max_acc, acc)
-            wandb.log({'acc':acc, 'loss':loss, 'running max acc':max_acc, 'lr': optimizer.param_groups[0]['lr']})
+            wandb.log({'acc':acc, 'loss':loss, 'running max acc':max_acc, 'lr': optimizer.param_groups[0]['lr']}) # nested, nor use commit=False
             logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
             if max_acc == acc: # max_acc updated
                 save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
