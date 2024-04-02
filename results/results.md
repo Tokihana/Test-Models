@@ -295,3 +295,15 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 - 调小学习率能够延缓变NaN的epoch数
 
 我怀疑是timm的LayerNorm实现不太行，所以改了nn.LayerNorm，到时再测测吧
+
+
+
+# 把baseline的NaN debug一下
+
+1. 改LayerNorm为nn.LayerNorm，还是会NaN
+
+   但是通过两次的对比，观察在相同LR下，NaN会在固定epoch的特定log位置出现。高度怀疑是发生在同一位置
+
+2. 启用baseline的qk_norm
+
+3. 自己实现一遍block
