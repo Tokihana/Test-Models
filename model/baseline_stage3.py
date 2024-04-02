@@ -1,81 +1,10 @@
 import torch
 import torch.nn as nn
 
-#from timm.models.vision_transformer import Block
-from timm.layers import DropPath, Mlp
+from timm.models.vision_transformer import Block
+#from timm.layers import DropPath, Mlp
 
 from .ir50_stage3 import iresnet50_stage3
-
-class Attention(nn.Module):
-    def __init__(self, dim: int,
-                 num_heads: int=8,
-                 qkv_bias: bool=False,
-                 attn_drop: float=0.,
-                 proj_drop: float=0.,):
-        spuer(Attention, self).__init__()
-        self.num_heads = num_heads
-        head_dim: int = dim // num_heads
-        self.scale: float = head_dim ** -0.5
-        
-        self.wq, self.wk, self.wv = nn.Linear(dim, dim, bias=qkv_bias), nn.Linear(dim, dim, bias=qkv_bias), nn.Linear(dim, dim, bias=qkv_bias)
-        self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim)
-        self.proj_drop = nn.Dropout(proj_drop)
-        
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        ''' x (B, N, C) -> (B, N, C)'''
-        B, N, C = x.shape
-        # BNC -> BNH(C/H) -> BHN(C/H)
-        q = self.wq(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
-        k = self.wk(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
-        v = self.wv(x).reshape(B, N, self.num_heads, C // self.num_heads).permute(0, 2, 1, 3)
-        
-        # attn, BHN(C/H) @ BH(C/H)N -> BHNN
-        attn = q @ k.transpose(-2, -1) / self.scale
-        attn = attn.soft_max(dim=-1)
-        attn = self.attn_drop(attn)
-        
-        # BHNN @ BHN(C/H) -> BHN(C/H) -> BNH(C/H) -> BNC
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        
-        return x
-    
-class Block(nn.Module):
-    def __init__(self, dim: int,
-                 num_heads: int=8,
-                 mlp_ratio: float=4.,
-                 qkv_bias: bool=False,
-                 attn_drop: float=0.,
-                 proj_drop: float=0.,
-                 drop_path: float=0.,
-                 act_layer: nn.Module=nn.GELU,
-                 norm_layer: nn.Module=nn.LayerNorm,
-                 has_mlp: bool=True):
-        super(Block, self).__init__()
-        self.has_mlp = has_mlp
-        self.norm1 = norm_layer(dim)
-        self.attn = Attention(dim, 
-                              num_heads=num_heads,
-                              qkv_bias=qkv_bias,
-                              attn_drop=attn_drop,
-                              proj_drop=proj_drop,)
-        self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        
-        if has_mlp:
-            self.norm2 = norm_layer(dim)
-            self.mlp = Mlp(in_features=dim,
-                           hidden_features=int(dim*mlp_ratio),
-                           act_layer=act_layer,
-                           drop=proj_drop)
-            self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-            
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x + self.drop_path1(self.attn(self.norm1(x)))
-        if self.has_mlp:
-            x = x + self.drop_path2(self.attn(self.norm2(x)))
-        return x
 
 class Baseline_stage3(nn.Module):
     def __init__(self,
@@ -102,6 +31,7 @@ class Baseline_stage3(nn.Module):
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
         self.blocks = nn.Sequential(*[
             Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
+                  qk_norm=True,
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
