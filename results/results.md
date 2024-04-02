@@ -312,6 +312,8 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 
 3. 自己实现一遍block？
 
+如果qk_norm后面没问题的话，在2.5e-5下再跑一次两个stage3的对照试验。跑完就开始AffectNet的部分。
+
 
 
 # 跑个AffectNetLR

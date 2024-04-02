@@ -18,7 +18,7 @@ MODEL:
 TRAIN:
     EPOCHS: 200
     BASE_LR: 1e-4
-    MIN_LR: 1e-7
+    MIN_LR: 1e-8
     
     OPTIMIZER:
         NAME: 'Adam'

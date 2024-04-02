@@ -18,7 +18,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/AffectNet7_SearchLR.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/FERPlus_200epoch_Reduce_Scheduler.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -327,5 +327,6 @@ if __name__ == '__main__':
         config.MODEL.ARCH = arch
         config.SYSTEM.CHECKPOINT = f'{config.SYSTEM.CHECKPOINT}_{arch}'
         config.freeze()
-        _test_lr()
+        #_test_lr()
+        main()
     
