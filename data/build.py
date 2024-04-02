@@ -54,7 +54,7 @@ def build_dataset(config):
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'FERPlus':
-        train_transform, val_transform = _get_affectnet_transform(img_size)
+        train_transform, val_transform = _get_ferplus_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'Training'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'PublicTest'), val_transform)
         nb_classes = 8

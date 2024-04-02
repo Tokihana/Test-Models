@@ -125,9 +125,8 @@ def main():
         # validate
         if val_loader is not None:
             acc, loss = validate(config, model, val_loader, logger)
-            wandb.log({'acc':acc, 'loss':loss})
             max_acc = max(max_acc, acc)
-            wandb.log({'running max acc':max_acc})
+            wandb.log({'acc':acc, 'loss':loss, 'running max acc':max_acc, 'lr': optimizer.param_groups[0]['lr']})
             logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
             if max_acc == acc: # max_acc updated
                 save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
@@ -185,7 +184,6 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         
         if idx % config.SYSTEM.PRINT_FREQ == 0:
             lr = optimizer.param_groups[0]['lr']
-            wandb.log({'running lr':lr})
             memory_used = torch.cuda.max_memory_allocated() / (1024.0 * 1024.0)
             etas = batch_time.avg*(num_steps - idx) # estimated time of arrival
             logger.info(
