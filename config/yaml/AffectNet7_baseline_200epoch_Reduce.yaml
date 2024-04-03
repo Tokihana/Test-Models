@@ -15,6 +15,7 @@ DATA:
 MODEL:
     ARCH: 'CLSFERBaseline_stage3'
     DEPTH: 8
+    ATTN_DROP: 0.4
     
 TRAIN:
     EPOCHS: 200
@@ -34,6 +35,6 @@ TRAIN:
         NAME: 'CrossEntropy'
         
 AUG:
-    MIXUP: 0.
+    MIXUP: 0.2
     
     
