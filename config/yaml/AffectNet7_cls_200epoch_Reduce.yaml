@@ -1,8 +1,8 @@
 # AffectNet7_cls_200epoch_Reduce.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'CLSFERBaseline_SearchLR_AffectNet7'
-    EXPERIMENT_PATH: '../autodl-tmp/results/CLSFER_SearchLR_AffectNet7'
+    EXPERIMENT_NAME: 'CLSFERBaseline_AffectNet7_200epoch'
+    EXPERIMENT_PATH: '../autodl-tmp/results/CLSFER_AffectNet7_cls_200epoch'
     SAVE_FREQ: 30
     PRINT_FREQ: 100
     
@@ -13,13 +13,13 @@ DATA:
     IMG_SIZE: 112
     
 MODEL:
-    ARCH: 'CLSFERBaseline_stage3'
+    ARCH: 'NonMultiCLSFER_stage3'
     DEPTH: 8
     
 TRAIN:
     EPOCHS: 200
-    BASE_LR: 1e-5
-    MIN_LR: 1e-8
+    BASE_LR: 1e-6
+    MIN_LR: 1e-9
     
     OPTIMIZER:
         NAME: 'Adam'
