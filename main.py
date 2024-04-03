@@ -119,14 +119,18 @@ def main():
 
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         # training
-        train_one_epoch(config=config, model=model, data_loader=train_loader, epoch=epoch, mix_fn = mix_fn, criterion=criterion, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
+        train_loss = train_one_epoch(config=config, model=model, data_loader=train_loader, epoch=epoch, mix_fn = mix_fn, criterion=criterion, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         if epoch % config.SYSTEM.SAVE_FREQ == 0 or epoch >= (config.TRAIN.EPOCHS-1):
             save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         # validate
         if val_loader is not None:
             acc, loss = validate(config, model, val_loader, logger)
             max_acc = max(max_acc, acc)
-            wandb.log({'acc':acc, 'loss':loss, 'running max acc':max_acc, 'lr': optimizer.param_groups[0]['lr']}) # nested, nor use commit=False
+            wandb.log({'acc':acc, 
+                       'train loss': train_loss, 
+                       'loss':loss, 
+                       'running max acc':max_acc, 
+                       'lr': optimizer.param_groups[0]['lr']}) # nested, nor use commit=False
             logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
             if max_acc == acc: # max_acc updated
                 save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
@@ -196,6 +200,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         lr_scheduler.step()
     epoch_time = time.time() - start
     logger.info(f'EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}')
+    return loss_avg.avg
         
     
 @torch.no_grad()
