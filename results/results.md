@@ -271,6 +271,13 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 
 可以看出来，使用CLS的话，精度还是会差一些的，另外stage3确实效果更优；这里没用mixup，用了的话效果可能会更好一些。
 
+| arch            | acc    |
+| --------------- | ------ |
+| Baseline_stage3 | 87.321 |
+| NonMulti_stage3 | 87.256 |
+| Baseline_stage4 | 85.724 |
+| NonMulti_stage4 | 85.494 |
+
 
 
 # FERPlus跑200epoch
@@ -313,6 +320,13 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 3. 自己实现一遍block？
 
 如果qk_norm后面没问题的话，在2.5e-5下再跑一次两个stage3的对照试验。跑完就开始AffectNet的部分。
+
+结果：
+
+| lr     | Baseline | CLS    |
+| ------ | -------- | ------ |
+| 1e-4   | 82.212   | 81.368 |
+| 2.5e-5 | 83.76    | 82.944 |
 
 
 

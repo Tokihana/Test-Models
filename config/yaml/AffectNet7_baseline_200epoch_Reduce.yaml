@@ -1,0 +1,39 @@
+# AffectNet7_baseline_200epoch_Reduce.yaml
+SYSTEM:
+    PROJECT_NAME: 'CLSFERBaseline'
+    EXPERIMENT_NAME: 'CLSFERBaseline_SearchLR_AffectNet7'
+    EXPERIMENT_PATH: '../autodl-tmp/results/CLSFER_SearchLR_AffectNet7'
+    SAVE_FREQ: 30
+    PRINT_FREQ: 100
+    
+DATA:
+    BATCH_SIZE: 256
+    DATASET: 'AffectNet_7'
+    DATA_PATH: '../autodl-tmp/AffectNet_7cls'
+    IMG_SIZE: 112
+    
+MODEL:
+    ARCH: 'CLSFERBaseline_stage3'
+    DEPTH: 8
+    
+TRAIN:
+    EPOCHS: 200
+    BASE_LR: 1e-5
+    MIN_LR: 1e-8
+    
+    OPTIMIZER:
+        NAME: 'Adam'
+        EPS: 1e-8
+        BETAS: (0.9, 0.999)
+        
+    LR_SCHEDULER:
+        NAME: 'reduce'
+        REDUCE_FACTOR: 0.5
+        
+    CRITERION:
+        NAME: 'CrossEntropy'
+        
+AUG:
+    MIXUP: 0.
+    
+    
