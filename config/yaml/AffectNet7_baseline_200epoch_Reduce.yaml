@@ -2,7 +2,7 @@
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'CLSFERBaseline_AffectNet7_200epoch'
-    EXPERIMENT_PATH: '../autodl-tmp/results/CLSFER_AffectNet7_baseline_200epoch'
+    EXPERIMENT_PATH: '../autodl-tmp/results/CLSFER_AffectNet7_cls_200epoch'
     SAVE_FREQ: 30
     PRINT_FREQ: 100
     

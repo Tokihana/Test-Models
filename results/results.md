@@ -344,3 +344,5 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 
 - 区分一下training loss和val loss，方便判断拟合情况
 - 继续添加正则化方法，降低过拟合影响。
+  - 先加个0.2的mixup
+  - 参考下ViT常用的正则化点，都加一下试试。
