@@ -23,13 +23,17 @@ def create_model(args, config):
                                num_classes=config.MODEL.NUM_CLASS, 
                                depth=config.MODEL.DEPTH,
                                mlp_ratio=config.MODEL.MLP_RATIO,
-                               attn_drop=config.MODEL.ATTN_DROP,)
+                               attn_drop=config.MODEL.ATTN_DROP,
+                               proj_drop=config.MODEL.PROJ_DROP,
+                               drop_path=config.MODEL.DROP_PATH,)
     elif config.MODEL.ARCH == 'NonMultiCLSFER_stage3':
         model = NonMultiCLSFER_stage3(img_size=config.DATA.IMG_SIZE,
                                       num_classes=config.MODEL.NUM_CLASS, 
                                       depth=config.MODEL.DEPTH, 
                                       mlp_ratio=config.MODEL.MLP_RATIO,
-                                      attn_drop=config.MODEL.ATTN_DROP,)
+                                      attn_drop=config.MODEL.ATTN_DROP,
+                                      proj_drop=config.MODEL.PROJ_DROP,
+                                      drop_path=config.MODEL.DROP_PATH,)
         
     return model
 

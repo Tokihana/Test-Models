@@ -55,10 +55,12 @@ _C.MODEL.NUM_CLASS = 7
 _C.MODEL.DEPTH = 2
 # mlp ratio
 _C.MODEL.MLP_RATIO = 4.
-# patch drop
-_C.MODEL.PATCH_DROP = 0.
 # attn drop
 _C.MODEL.ATTN_DROP = 0.
+# proj drop
+_C.MODEL.PROJ_DROP = 0.
+# drop path
+_C.MODEL.DROP_PATH = 0.
 
 
 ## ----------------------------------------------

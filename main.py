@@ -47,6 +47,8 @@ def main():
             "num classes": config.MODEL.NUM_CLASS,
             "mlp ratio": config.MODEL.MLP_RATIO,
             "attn drop": config.MODEL.ATTN_DROP,
+            "proj drop": config.MODEL.PROJ_DROP,
+            "drop path": config.MODEL.DROP_PATH,
             # training settings
             "learning_rate": config.TRAIN.BASE_LR,
             "epochs": config.TRAIN.EPOCHS,
