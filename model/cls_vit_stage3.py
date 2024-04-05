@@ -137,7 +137,8 @@ class RepeatCLSBlock(nn.Module):
             
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         '''x (BNC)'''
-        x = x + self.drop_path1(self.attn(self.norm1(x))).repeat(1, dim, 1)
+        B, N, C = x.shape
+        x = x + self.drop_path1(self.attn(self.norm1(x))).repeat(1, N, 1)
         if self.has_mlp:
             x = x + self.drop_path2(self.mlp(self.norm2(x)))
         return x
