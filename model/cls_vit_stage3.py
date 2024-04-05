@@ -155,7 +155,7 @@ class NonMultiCLSFER_stage3(nn.Module):
                  drop_path: float = 0.,
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
-                 norm_layer: nn.Module = nn.LayerNorm
+                 norm_layer: nn.Module = nn.LayerNorm,
                  block: nn.Module=NonMultiCLSBlock):
         super(NonMultiCLSFER_stage3, self).__init__()
         self.irback = iresnet50_stage3(num_features=num_classes)
