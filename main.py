@@ -18,7 +18,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/AffectNet7_cls_200epoch_Reduce.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_200epoch_Reduce_Scheduler.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
