@@ -106,6 +106,41 @@ class NonMultiCLSBlock(nn.Module):
         if self.has_mlp:
             x = x + self.drop_path2(self.mlp(self.norm2(x)))
         return x
+
+class RepeatCLSBlock(nn.Module):
+    def __init__(self, dim: int,
+                 num_heads: int=8,
+                 mlp_ratio: float=4.,
+                 qkv_bias: bool=False,
+                 attn_drop: float=0.,
+                 proj_drop: float=0.,
+                 drop_path: float=0.,
+                 act_layer: nn.Module=nn.GELU,
+                 norm_layer: nn.Module=nn.LayerNorm,
+                 has_mlp: bool=True):
+        super(RepeatCLSBlock, self).__init__()
+        self.has_mlp = has_mlp
+        self.norm1 = norm_layer(dim)
+        self.attn = CLSAttention(dim,
+                                 num_heads=num_heads,
+                                 qkv_bias=qkv_bias,
+                                 attn_drop=attn_drop,
+                                 proj_drop=proj_drop,)
+        self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        is has_mlp:
+            self.norm2 = norm_layer(dim)
+            self.mlp = Mlp(in_features=dim,
+                           hidden_features=int(dim*mlp_ratio),   
+                           act_layer=act_layer, 
+                           drop=proj_drop)
+            self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn. Identity()
+            
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        '''x (BNC)'''
+        x = x + self.drop_path1(self.attn(self.norm1(x))).repeat(1, dim, 1)
+        if self.has_mlp:
+            x = x + self.drop_path2(self.mlp(self.norm2(x)))
+        return x
     
 class NonMultiCLSFER_stage3(nn.Module):
     def __init__(self,
@@ -120,7 +155,8 @@ class NonMultiCLSFER_stage3(nn.Module):
                  drop_path: float = 0.,
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
-                 norm_layer: nn.Module = nn.LayerNorm):
+                 norm_layer: nn.Module = nn.LayerNorm
+                 block: nn.Module=NonMultiCLSBlock):
         super(NonMultiCLSFER_stage3, self).__init__()
         self.irback = iresnet50_stage3(num_features=num_classes)
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
@@ -131,7 +167,7 @@ class NonMultiCLSFER_stage3(nn.Module):
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
         self.blocks = nn.Sequential(*[
-            NonMultiCLSBlock(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
+            block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
@@ -155,3 +191,26 @@ class NonMultiCLSFER_stage3(nn.Module):
         # head
         out = self.head(x_cls)
         return out
+    
+    
+def get_NonMultiCLSFER_stage3(config):
+    model = NonMultiCLSFER_stage3(img_size=config.DATA.IMG_SIZE,
+                                      num_classes=config.MODEL.NUM_CLASS, 
+                                      depth=config.MODEL.DEPTH, 
+                                      mlp_ratio=config.MODEL.MLP_RATIO,
+                                      attn_drop=config.MODEL.ATTN_DROP,
+                                      proj_drop=config.MODEL.PROJ_DROP,
+                                      drop_path=config.MODEL.DROP_PATH,
+                                     block=NonMultiCLSBlock)
+    return model
+
+def get_RepeatCLSFER(config):
+    model = NonMultiCLSFER_stage3(img_size=config.DATA.IMG_SIZE,
+                                      num_classes=config.MODEL.NUM_CLASS, 
+                                      depth=config.MODEL.DEPTH, 
+                                      mlp_ratio=config.MODEL.MLP_RATIO,
+                                      attn_drop=config.MODEL.ATTN_DROP,
+                                      proj_drop=config.MODEL.PROJ_DROP,
+                                      drop_path=config.MODEL.DROP_PATH,
+                                     block=RepeatCLSBlock)
+    return model

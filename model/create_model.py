@@ -4,7 +4,7 @@ from .iresnet import iresnet50
 from .baseline import Baseline
 from .baseline_stage3 import Baseline_stage3
 from .cls_vit import NonMultiCLSFER
-from .cls_vit_stage3 import NonMultiCLSFER_stage3
+from .cls_vit_stage3 import get_NonMultiCLSFER_stage3, get_RepeatCLSFER
 
 def create_model(args, config):
     model = None
@@ -27,13 +27,9 @@ def create_model(args, config):
                                proj_drop=config.MODEL.PROJ_DROP,
                                drop_path=config.MODEL.DROP_PATH,)
     elif config.MODEL.ARCH == 'NonMultiCLSFER_stage3':
-        model = NonMultiCLSFER_stage3(img_size=config.DATA.IMG_SIZE,
-                                      num_classes=config.MODEL.NUM_CLASS, 
-                                      depth=config.MODEL.DEPTH, 
-                                      mlp_ratio=config.MODEL.MLP_RATIO,
-                                      attn_drop=config.MODEL.ATTN_DROP,
-                                      proj_drop=config.MODEL.PROJ_DROP,
-                                      drop_path=config.MODEL.DROP_PATH,)
+        model = get_NonMultiCLSFER_stage3(config)
+    elif config.MODEL.ARCH == 'RepeatCLSFER':
+        model = get_RepeatCLSFER(config)
         
     return model
 

@@ -347,3 +347,5 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
   - 先加个0.2的mixup
   - 加0.2的proj_drop
   - 改用exponential
+- 经过上述正则化后，确实一定程度上抑制了过拟合，但过拟合现象还是很严重。
+- 
