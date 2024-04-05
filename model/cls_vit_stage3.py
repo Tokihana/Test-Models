@@ -127,7 +127,7 @@ class RepeatCLSBlock(nn.Module):
                                  attn_drop=attn_drop,
                                  proj_drop=proj_drop,)
         self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        is has_mlp:
+        if has_mlp:
             self.norm2 = norm_layer(dim)
             self.mlp = Mlp(in_features=dim,
                            hidden_features=int(dim*mlp_ratio),   
