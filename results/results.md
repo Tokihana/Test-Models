@@ -340,7 +340,7 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
 
 0.4的attn_drop稍微缓解了一点过拟合的情况，另外，好像很接近SOTA的baseline了？
 
-下一步要做两个改动：
+下一步要做的实验：
 
 - 区分一下training loss和val loss，方便判断拟合情况
 - 继续添加正则化方法，降低过拟合影响。
@@ -348,4 +348,36 @@ FERPlus的测试时间确实比较长，单个epoch要1min40s。连带上LR测�
   - 加0.2的proj_drop
   - 改用exponential
 - 经过上述正则化后，确实一定程度上抑制了过拟合，但过拟合现象还是很严重。
-- 
+- 去掉attn_drop和proj_drop，改用0.5的drop_path，效果会更稳定一些
+
+目前来看，过拟合还是很严重，后面再想想办法吧。
+
+
+
+# RepeatCLS
+
+现在有这样一个想法，设原始的attn计算为
+$$
+\left[\begin{array}{}cls\\patch\end{array}\right] @
+\left[\begin{array}{}cls & patch\end{array}\right] \to \left[\begin{array}{}cls\cdot cls& cls \cdot patch\\ patch\cdot cls & patch \cdot patch \end{array}\right]\\
+\left[\begin{array}{}cls\cdot cls& cls \cdot patch\\ patch\cdot cls & patch \cdot patch \end{array}\right] @ \left[\begin{array}{}cls\\patch\end{array}\right] \to \left[\begin{array}{}cls^3 + cls\cdot patch \cdot cls\\
+patch\cdot cls \cdot cls + patch^3\end{array}\right]\\
+\left[\begin{array}{}cls^3 + cls\cdot patch \cdot cls\\
+patch\cdot cls \cdot cls + patch^3\end{array}\right] + \left[\begin{array}{}cls\\patch\end{array}\right]
+$$
+ 而对于Cross，其计算为
+$$
+\left[\begin{array}{}cls\end{array}\right] @
+\left[\begin{array}{}cls & patch\end{array}\right] \to \left[\begin{array}{}cls\cdot cls& cls \cdot patch\end{array}\right]\\
+\left[\begin{array}{}cls\cdot cls& cls \cdot patch \end{array}\right] @ \left[\begin{array}{}cls\\patch\end{array}\right] \to \left[\begin{array}{}cls^3 + cls\cdot patch \cdot cls\end{array}\right]\\
+\left[\begin{array}{}cls^3 + cls\cdot patch \cdot cls\end{array}\right] + \left[\begin{array}{}cls\end{array}\right]
+$$
+在我们的Cross实现中，始终没有更新patch，是否可以通过将cls repeat，加到patch上，对其进行更新？
+
+- 在attn之后就repeat，参与v的计算（NN开销仍然存在，丧失Cross的速度优势）
+- 在CLS计算v之后repeat，将更新后的cls加到patch上（运算开销增大，运行效率优势丧失，但确实有补偿效果）
+
+$$
+\left[\begin{array}{}cls^3 + cls\cdot patch \cdot cls\\ N \times(cls^3 + cls\cdot patch \cdot cls)\end{array}\right] + \left[\begin{array}{}cls\\patch\end{array}\right]
+$$
+

@@ -4,7 +4,7 @@ from .iresnet import iresnet50
 from .baseline import Baseline
 from .baseline_stage3 import Baseline_stage3
 from .cls_vit import NonMultiCLSFER
-from .cls_vit_stage3 import get_NonMultiCLSFER_stage3, get_RepeatCLSFER
+from .cls_vit_stage3 import get_NonMultiCLSFER_stage3, get_RepeatCLSFER, get_RepeatAttentionCLSFER
 
 def create_model(args, config):
     model = None
@@ -30,6 +30,8 @@ def create_model(args, config):
         model = get_NonMultiCLSFER_stage3(config)
     elif config.MODEL.ARCH == 'RepeatCLSFER':
         model = get_RepeatCLSFER(config)
+    elif config.MODEL.ARCH == 'RepeatAttentionFER':
+        model = get_RepeatAttentionCLSFER(config)
         
     return model
 
