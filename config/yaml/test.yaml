@@ -6,6 +6,7 @@ SYSTEM:
     SAVE_FREQ: 30
     
 DATA:
+    IMG_SIZE: 112
     BATCH_SIZE: 5
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'

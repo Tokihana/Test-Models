@@ -375,9 +375,39 @@ $$
 在我们的Cross实现中，始终没有更新patch，是否可以通过将cls repeat，加到patch上，对其进行更新？
 
 - 在attn之后就repeat，参与v的计算（NN开销仍然存在，丧失Cross的速度优势）
-- 在CLS计算v之后repeat，将更新后的cls加到patch上（运算开销增大，运行效率优势丧失，但确实有补偿效果）
+- 在CLS计算v之后repeat，将更新后的cls加到patch上（运算开销增大，运行效率优势丧失$\frac 2 3$，但确实有补偿效果）
 
 $$
 \left[\begin{array}{}cls^3 + cls\cdot patch \cdot cls\\ N \times(cls^3 + cls\cdot patch \cdot cls)\end{array}\right] + \left[\begin{array}{}cls\\patch\end{array}\right]
 $$
 
+后一个思路目前用的repeat，可能是导致开销变大的原因，因为数据不需要复制一份，改用expand试一下吧（会高一点，但高的不多）。
+
+| arch     | throughput | flops(G)  | params.(M) |
+| -------- | ---------- | --------- | ---------- |
+| Baseline | 1410       | 7.133     | 46.512     |
+| CLSFER   | **1882**   | **5.922** | **46.510** |
+| Repeat   | 1496       | 6.925     | **46.510** |
+| Expand   | 1499       | 6.925     | **46.510** |
+
+还是再找找有没有更好的思路吧。
+
+
+
+# 好像出现了bug
+
+今天实现MultiScale的时候，发现NonMulti的实现中，更新cls token的位置，似乎存在代码错误
+
+错误代码
+
+```
+x = x[:, 0:1, ...] + self.attn_drop(self.attn(self.norm1(x)))
+```
+
+理论上正确的代码
+
+```
+x[:, 0:1, ...] = x[:, 0:1, ...] + self.attn_drop(self.attn(self.norm1(x)))
+```
+
+错误代码会使得整个x的shape变为(B, 1, C)，而正确的形式应该为(B, N, C)，由于错误代码会直接丢掉patch部分，且在运行中没有保存，因此需要重新跑一轮实验，确定错误代码的影响。
