@@ -188,7 +188,7 @@ class NonMultiCLSBlock_onlyCLS(nn.Module):
                 act_layer: nn.Module=nn.GELU,
                 norm_layer: nn.Module=nn.LayerNorm,
                 has_mlp: bool=True):
-        super(NonMultiCLSBlock, self).__init__()
+        super(NonMultiCLSBlock_onlyCLS, self).__init__()
         self.has_mlp = has_mlp
         self.norm1 = norm_layer(dim)
         self.attn = CLSAttention(dim, 

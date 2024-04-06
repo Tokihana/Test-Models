@@ -1,4 +1,4 @@
-# RAF-DB_200epoch_Reduce_Scheduler.yaml
+# Check_CLS_implement.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'Check_CLS_implement'
