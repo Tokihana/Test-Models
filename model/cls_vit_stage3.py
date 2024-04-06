@@ -172,9 +172,10 @@ class NonMultiCLSBlock(nn.Module):
             self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x[:, 0:1, ...] = x[:, 0:1, ...] + self.drop_path1(self.attn(self.norm1(x)))
+        x_cls = x[:, 0:1, ...] + self.drop_path1(self.attn(self.norm1(x)))
+        new_x = torch.cat((x_cls, x[:, 1:, ...].clone()), dim=1)
         if self.has_mlp:
-            x = x + self.drop_path2(self.mlp(self.norm2(x)))
+            x = new_x + self.drop_path2(self.mlp(self.norm2(new_x)))
         return x
     
 class NonMultiCLSBlock_onlyCLS(nn.Module):
