@@ -178,6 +178,41 @@ class NonMultiCLSBlock(nn.Module):
             x = new_x + self.drop_path2(self.mlp(self.norm2(new_x)))
         return x
     
+class NonMultiCLSBlock_catAfterMlp(nn.Module):
+    def __init__(self, dim: int,
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias: bool=False,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                has_mlp: bool=True):
+        super(NonMultiCLSBlock_catAfterMlp, self).__init__()
+        self.has_mlp = has_mlp
+        self.norm1 = norm_layer(dim)
+        self.attn = CLSAttention(dim, 
+                                 num_heads=num_heads,
+                                 qkv_bias=qkv_bias,
+                                 attn_drop=attn_drop,
+                                 proj_drop=proj_drop,)
+        self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        if has_mlp:
+            self.norm2 = norm_layer(dim)
+            self.mlp = Mlp(in_features=dim, 
+                           hidden_features=int(dim*mlp_ratio), 
+                           act_layer=act_layer, 
+                           drop=proj_drop)
+            self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_cls = x[:, 0:1, ...] + self.drop_path1(self.attn(self.norm1(x)))
+        if self.has_mlp:
+            x_cls = x_cls + self.drop_path2(self.mlp(self.norm2(x_cls)))
+        x = torch.cat((x_cls, x[:, 1:, ...].clone()), dim=1)
+        return x
+    
 class NonMultiCLSBlock_onlyCLS(nn.Module):
     def __init__(self, dim: int,
                 num_heads: int=8,
@@ -211,7 +246,6 @@ class NonMultiCLSBlock_onlyCLS(nn.Module):
         
         if self.has_mlp:
             x = x + self.drop_path2(self.mlp(self.norm2(x)))
-        print(x.shape)
         return x
     
 class ExpandCLSBlock(nn.Module):
@@ -504,4 +538,15 @@ def get_MultiScaleCLSFER(config):
                             attn_drop=config.MODEL.ATTN_DROP,
                             proj_drop=config.MODEL.PROJ_DROP,
                             drop_path=config.MODEL.DROP_PATH,)
+    return model
+
+def get_NonMultiCLSFER_catAfterMlp(config):
+    model = NonMultiCLSFER_stage3(img_size=config.DATA.IMG_SIZE,
+                            num_classes=config.MODEL.NUM_CLASS, 
+                            depth=config.MODEL.DEPTH, 
+                            mlp_ratio=config.MODEL.MLP_RATIO,
+                            attn_drop=config.MODEL.ATTN_DROP,
+                            proj_drop=config.MODEL.PROJ_DROP,
+                            drop_path=config.MODEL.DROP_PATH,
+                            block=NonMultiCLSBlock_catAfterMlp)
     return model

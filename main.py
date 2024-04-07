@@ -18,7 +18,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/Check_CLS_implement.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/test.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -83,11 +83,13 @@ def main():
     if config.MODE.FLOP:
         params, flops = compute_flop_params(config, model, logger)
         wandb.log({'params':params, 'flops':flops})
+        wandb.finish()
         return
     
     if config.MODE.THROUGHPUT:
         through, step_time=throughput(model, train_loader, logger)
         wandb.log({'throughput':through, 'time per stem':step_time})
+        wandb.finish()
         return
     
     # build optimier
@@ -328,7 +330,7 @@ if __name__ == '__main__':
     #_test_gamma()     
     #_test_mixup()
     #_test_drop_attn()
-    archs = ['NonMultiCLSFER_onlyCLS', 'NonMultiCLSFER_stage3']
+    archs = ['NonMultiCLSFER_onlyCLS', 'NonMultiCLSFER_stage3', 'NonMultiCLSFER_catAfterMlp', 'CLSFERBaseline_stage3']
     for arch in archs:
         config.defrost()
         config.MODEL.ARCH = arch

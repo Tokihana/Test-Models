@@ -419,3 +419,16 @@ x_cls = x[:, 0:1, ...] + self.attn_drop(self.attn(self.norm1(x)))
 new_x = torch.cat((x_cls, x[:, 1:, ...].clone()), dim=1)
 ```
 
+cat操作可能会导致运行效率下降，我需要测一测。
+
+先加个正则化，loss抖得太厉害了。Mixup0.2, stochastic drop path 0.5
+
+试着把cat放在mlp后面了，性能改善了很多。
+
+| arch            | throughput | FLOPs(G) | Params.(M) |
+| --------------- | ---------- | -------- | ---------- |
+| NonMultiCLS_cat | 1487       | 6.925    | 46.510     |
+| CLS_catAfterMlp | 1782       | 6.102    | 46.510     |
+| CLS_only        | 1886       | 5.922    | 46.510     |
+| Baseline        | 1400       | 7.133    | 46.512     |
+
