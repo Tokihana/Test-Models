@@ -411,3 +411,11 @@ x[:, 0:1, ...] = x[:, 0:1, ...] + self.attn_drop(self.attn(self.norm1(x)))
 ```
 
 错误代码会使得整个x的shape变为(B, 1, C)，而正确的形式应该为(B, N, C)，由于错误代码会直接丢掉patch部分，且在运行中没有保存，因此需要重新跑一轮实验，确定错误代码的影响。
+
+由于直接赋值给`x[:, 0:1, ...]`，会导致`.backward()`报错`inplace error`，因此需要赋值给一个新的变量。
+
+```
+x_cls = x[:, 0:1, ...] + self.attn_drop(self.attn(self.norm1(x)))
+new_x = torch.cat((x_cls, x[:, 1:, ...].clone()), dim=1)
+```
+

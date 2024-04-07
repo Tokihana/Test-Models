@@ -211,6 +211,7 @@ class NonMultiCLSBlock_onlyCLS(nn.Module):
         
         if self.has_mlp:
             x = x + self.drop_path2(self.mlp(self.norm2(x)))
+        print(x.shape)
         return x
     
 class ExpandCLSBlock(nn.Module):
@@ -337,6 +338,7 @@ class NonMultiCLSFER_stage3(nn.Module):
                  drop_path: float = 0.,
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
+                 act_layer: nn.Module = nn.GELU,
                  norm_layer: nn.Module = nn.LayerNorm,
                  block: nn.Module=NonMultiCLSBlock):
         super(NonMultiCLSFER_stage3, self).__init__()
@@ -348,9 +350,12 @@ class NonMultiCLSFER_stage3(nn.Module):
         
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
+        # stochastic depth drop path
+        dpr = [x.item() for x in torch.linspace(0, drop_path, depth)]
+        
         self.blocks = nn.Sequential(*[
             block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
-                  attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
+                  attn_drop=attn_drop, proj_drop=proj_drop, drop_path=dpr[i], act_layer=act_layer, norm_layer=norm_layer)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
