@@ -12,7 +12,7 @@ DATA:
     DATA_PATH: '../FERdatasets/RAF-DB'
     
 MODEL:
-    ARCH: 'NonMultiCLSFER_stage3'
+    ARCH: 'NonMultiCLSFER_addpatches'
     DEPTH: 8
     
 MODE:

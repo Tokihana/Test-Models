@@ -432,3 +432,16 @@ cat操作可能会导致运行效率下降，我需要测一测。
 | CLS_only        | 1886       | 5.922    | 46.510     |
 | Baseline        | 1400       | 7.133    | 46.512     |
 
+抽时间写一下每个block的test吧，以防万一。
+
+今天发现drop path也是模型架构敏感的，Baseline在加了一些drop path后效果下降了。
+
+| arch         | RAF-DB | FERPlus | AffectNet |
+| ------------ | ------ | ------- | --------- |
+| Baseline     | 86.441 | 83.76   |           |
+| CLS_only     | 87.256 | 82.944  |           |
+| catBeforeMlp | 87.549 | -       |           |
+| catAfterMlp  | 87.744 | 83.619  |           |
+
+
+
