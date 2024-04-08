@@ -4,7 +4,7 @@ import torch.nn as nn
 from timm.layers import DropPath, Mlp
 # local dependencies
 from .ir50_stage3 import iresnet50_stage3
-from .cls_vit_stage3 import CLSAttention
+from .cls_vit_stage3 import CLSAttention, NonMultiCLSBlock
 
 class NonMultiCLSBlock_catAfterMlp(nn.Module):
     def __init__(self, dim: int,
@@ -20,6 +20,7 @@ class NonMultiCLSBlock_catAfterMlp(nn.Module):
                 add_to_patch: bool=False):
         super(NonMultiCLSBlock_catAfterMlp, self).__init__()
         self.has_mlp = has_mlp
+        self.add_to_patch = add_to_patch
         self.norm1 = norm_layer(dim)
         self.attn = CLSAttention(dim, 
                                  num_heads=num_heads,
@@ -40,7 +41,7 @@ class NonMultiCLSBlock_catAfterMlp(nn.Module):
         x_cls = x[:, 0:1, ...] + self.drop_path1(self.attn(self.norm1(x)))
         if self.has_mlp:
             x_cls = x_cls + self.drop_path2(self.mlp(self.norm2(x_cls)))
-        if add_to_patch: # add attn-ed cls token to patches
+        if self.add_to_patch: # add attn-ed cls token to patches
             new_patches = x[:, 1:, ...].clone() + x_cls.expand(-1, N-1, -1)
             x = torch.cat((x_cls, new_patches), dim=1)
         else:
