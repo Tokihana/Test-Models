@@ -12,7 +12,7 @@ DATA:
     IMG_SIZE: 112
     
 MODEL:
-    ARCH: 'RepeatCLSFER'
+    ARCH: 'NonMultiCLSFER_addpatches'
     DEPTH: 8
     
 TRAIN:
