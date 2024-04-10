@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 
 def build_criterion(config):
