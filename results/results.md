@@ -442,6 +442,31 @@ cat操作可能会导致运行效率下降，我需要测一测。
 | CLS_only     | 87.256 | 82.944  |           |
 | catBeforeMlp | 87.549 | -       |           |
 | catAfterMlp  | 87.744 | 83.619  |           |
+| addPatches   | 87.093 |         |           |
+
+AffectNet先放置，测试一下把CLS expand加到patch上的效果
 
 
 
+# add with expand
+
+在拼接patches之前，将cls token做expand，加到patches上。
+
+
+
+# DropPath测试
+
+这个测试确实没做，感觉不同大小的数据集对DropPath的需求不同，后面再查一查相关的信息。
+
+嗯，droppath似乎也与epoch数相关。拉个长epoch试一试。
+
+
+
+# 跑MultiScale
+
+目前有两种划分MultiScale的想法：
+
+1. 类似POSTER的思想，只取stage3，然后对stage3的channel上下采样。
+2. 类似Unet的思想，取stage234。这个思路的话算量会比较大。
+
+关键是怎么选择， 不确定有什么评判方法。

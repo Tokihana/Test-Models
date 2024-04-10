@@ -7,6 +7,7 @@ import argparse
 import wandb
 import torch
 import torch.nn as nn
+from torchmetrics.classification import MulticlassConfusionMatrix
 from timm.utils import accuracy, AverageMeter
 # local dependencies
 from config.config import get_config
@@ -18,7 +19,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/Check_CLS_implement.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/test.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -218,6 +219,11 @@ def validate(config, model, data_loader, logger):
     batch_time = AverageMeter()
     
     end = time.time()
+    if config.TRAIN.CONFUSION_MATRIX:
+        n_class = config.MODEL.NUM_CLASS
+        metric = MulticlassConfusionMatrix(num_classes=n_class).cuda()
+        confusion_matrix = torch.Tensor(n_class, n_class).cuda()
+
     for idx, (images, targets) in enumerate(data_loader):
         images = images.cuda()
         targets = targets.cuda()
@@ -233,6 +239,10 @@ def validate(config, model, data_loader, logger):
         loss_avg.update(loss.item(), targets.size(0))
         acc_avg.update(acc.item(), targets.size(0))
         
+        if config.TRAIN.CONFUSION_MATRIX:
+            _, pred=output.topk(k=1, dim=1)
+            pred=pred.t().squeeze(0)
+            confusion_matrix += metric(pred, targets)
         
         batch_time.update(time.time() - end)
         end = time.time()
@@ -245,7 +255,11 @@ def validate(config, model, data_loader, logger):
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Acc {acc_avg.val:.3f} ({acc_avg.avg:.3f})\t'
                 f'Mem {memory_used:.0f}MB')
-            
+    
+    if config.TRAIN.CONFUSION_MATRIX:
+        print(confusion_matrix.int().tolist())
+        wandb.Table(data=confusion_matrix.int().tolist())
+        
     logger.info(f' * Acc {acc_avg.avg:.3f}')
     return acc_avg.avg,  loss_avg.avg
                   

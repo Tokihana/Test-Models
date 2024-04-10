@@ -96,6 +96,8 @@ _C.TRAIN.WARMUP_LR = 0.0
 _C.TRAIN.MIN_LR = 0.
 # resume checkpoint path
 _C.TRAIN.RESUME = ''
+# whether to use confusion matrix
+_C.TRAIN.CONFUSION_MATRIX = False
 
 # criterion
 _C.TRAIN.CRITERION = CN()

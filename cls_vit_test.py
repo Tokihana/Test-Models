@@ -14,6 +14,7 @@ from config.config import get_config
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
 from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput
 from model import create_model
+from main import validate
 
 def parse_option():
     parser = argparse.ArgumentParser()
@@ -38,6 +39,18 @@ class MixupTests(unittest.TestCase):
             logger.info(f'After mix: {images.shape}, {targets.shape}')
             logger.info(targets)
             break
+            
+class ConfusionMatrixTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.train_loader, self.val_loader, self.mix_fn = build_loader(config)
+        self.model = create_model(args, config).cuda()
+        
+    def test_confusion_matrix(self):
+        config.defrost()
+        config.TRAIN.CONFUSION_MATRIX = True
+        config.freeze()
+        validate(config, self.model, self.val_loader, logger)
         
 
 class BackboneTests(unittest.TestCase):
@@ -156,6 +169,7 @@ class CLSViTTests(unittest.TestCase):
         out = block(self.input)
         print(f'After Block shape: {out.shape}')
         self.assertEqual(out.shape, torch.Size([B, 1, C]))
+        
         
             
 

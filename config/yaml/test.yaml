@@ -19,8 +19,9 @@ MODE:
     THROUGHPUT: True
     
 TRAIN:
-    EPOCHS: 60
+    EPOCHS: 3
     BASE_LR: 5e-5
+    CONFUSION_MATRIX: True
     
     OPTIMIZER:
         NAME: 'Adam'
