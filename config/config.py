@@ -61,6 +61,10 @@ _C.MODEL.ATTN_DROP = 0.
 _C.MODEL.PROJ_DROP = 0.
 # drop path
 _C.MODEL.DROP_PATH = 0.
+# qk norm
+_C.MODEL.QK_NORM = True
+## Layer Scale
+_C.MODEL.LAYER_SCALE = 1e-4
 
 
 ## ----------------------------------------------

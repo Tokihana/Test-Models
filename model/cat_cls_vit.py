@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 # third-party dependencies
 from timm.layers import DropPath, Mlp
+from timm.models.vision_transformer import LayerScale
 # local dependencies
 from .ir50_stage3 import iresnet50_stage3
 from .cls_vit_stage3 import CLSAttention, NonMultiCLSBlock
@@ -11,6 +12,7 @@ class NonMultiCLSBlock_catAfterMlp(nn.Module):
                 num_heads: int=8,
                 mlp_ratio: float=4.,
                 qkv_bias: bool=False,
+                init_values: Optional[float] = None,
                 attn_drop: float=0.,
                 proj_drop: float=0.,
                 drop_path: float=0.,
@@ -27,6 +29,7 @@ class NonMultiCLSBlock_catAfterMlp(nn.Module):
                                  qkv_bias=qkv_bias,
                                  attn_drop=attn_drop,
                                  proj_drop=proj_drop,)
+        self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         if has_mlp:
             self.norm2 = norm_layer(dim)
@@ -34,13 +37,14 @@ class NonMultiCLSBlock_catAfterMlp(nn.Module):
                            hidden_features=int(dim*mlp_ratio), 
                            act_layer=act_layer, 
                            drop=proj_drop)
+            self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
             self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, N, C = x.shape
-        x_cls = x[:, 0:1, ...] + self.drop_path1(self.attn(self.norm1(x)))
+        x_cls = x[:, 0:1, ...] + self.drop_path1(self.ls1(self.attn(self.norm1(x))))
         if self.has_mlp:
-            x_cls = x_cls + self.drop_path2(self.mlp(self.norm2(x_cls)))
+            x_cls = x_cls + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls))))
         if self.add_to_patch: # add attn-ed cls token to patches
             new_patches = x[:, 1:, ...].clone() + x_cls.expand(-1, N-1, -1)
             x = torch.cat((x_cls, new_patches), dim=1)
@@ -56,6 +60,7 @@ class NonMultiCLSFER_stage3(nn.Module):
                  num_heads: int = 8,
                  mlp_ratio: float = 4.,
                  qkv_bias=False,
+                 init_values: Optional[float]=None,
                  attn_drop: float = 0.,
                  proj_drop: float = 0.,
                  drop_path: float = 0.,
@@ -79,6 +84,7 @@ class NonMultiCLSFER_stage3(nn.Module):
         
         self.blocks = nn.Sequential(*[
             block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
+                  init_values=init_values,
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=dpr[i], act_layer=act_layer, norm_layer=norm_layer,   
                  add_to_patch=add_to_patch)
             for i in range(depth)])
@@ -112,6 +118,7 @@ def get_NonMultiCLSFER_catAfterMlp(config):
                             attn_drop=config.MODEL.ATTN_DROP,
                             proj_drop=config.MODEL.PROJ_DROP,
                             drop_path=config.MODEL.DROP_PATH,
+                            init_values=config.MODEL.LAYER_SCALE,
                             block=NonMultiCLSBlock_catAfterMlp)
     return model
 
@@ -123,6 +130,7 @@ def get_NonMutiCLSFER_addpatches(config):
                             attn_drop=config.MODEL.ATTN_DROP,
                             proj_drop=config.MODEL.PROJ_DROP,
                             drop_path=config.MODEL.DROP_PATH,
+                            init_values=config.MODEL.LAYER_SCALE,
                             block=NonMultiCLSBlock_catAfterMlp,
                             add_to_patch=True)
     return model

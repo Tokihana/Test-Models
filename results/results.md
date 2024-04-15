@@ -446,6 +446,8 @@ cat操作可能会导致运行效率下降，我需要测一测。
 
 AffectNet先放置，测试一下把CLS expand加到patch上的效果
 
+> Add patches效果确实不太行，还是直接cat吧。
+
 
 
 # add with expand
