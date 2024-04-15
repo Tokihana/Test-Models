@@ -1,6 +1,7 @@
+from typing import Optional
+
 import torch
 import torch.nn as nn
-
 from timm.models.vision_transformer import Block
 #from timm.layers import DropPath, Mlp
 
@@ -33,7 +34,7 @@ class Baseline_stage3(nn.Module):
         self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
         self.blocks = nn.Sequential(*[
             Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
-                  qk_norm=qk_norm, init_values, 
+                  qk_norm=qk_norm, init_values=init_values, 
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)

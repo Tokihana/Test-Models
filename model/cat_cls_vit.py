@@ -1,6 +1,7 @@
+from typing import Optional
+# third-party dependencies
 import torch
 import torch.nn as nn
-# third-party dependencies
 from timm.layers import DropPath, Mlp
 from timm.models.vision_transformer import LayerScale
 # local dependencies
