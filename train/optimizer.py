@@ -1,4 +1,5 @@
 from torch import optim as optim
+from .sam import SAM
 
 def build_optimizer(config, model):
     '''
@@ -21,6 +22,9 @@ def build_optimizer(config, model):
         optimizer = optim.Adam(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS, lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
     elif opt_lower == 'adamw':
         optimizer = optim.AdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS, lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
+    if opt_lower == 'samadam':
+        optimizer = SAM(parameters, base_optimizer=optim.Adam, rho=0.5, adaptive=True, 
+                        lr=config.TRAIN.BASE_LR, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,)
     
     return optimizer
 

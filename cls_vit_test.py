@@ -27,6 +27,18 @@ def parse_option():
     config = get_config(args)
     return args, config
 
+class DataLoaderTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        config.defrost()
+        config.DATA.BATCH_SIZE=5
+        config.freeze()
+        self.train_loader, self.val_loader, _ = build_loader(config)
+    def test_outputs(self):
+        for images, targets in self.train_loader:
+            break
+        print(images, targets)
+
 class MixupTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):

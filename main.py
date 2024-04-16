@@ -13,7 +13,7 @@ from timm.utils import accuracy, AverageMeter
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
-from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput
+from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput, disable_running_stats, enable_running_stats
 from model import create_model
 
 def parse_option():
@@ -169,21 +169,31 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         if mix_fn is not None:
             images, targets = mix_fn(images, targets)
             
-        outputs = model(images)
-        
-        if type(outputs) is dict: # for RepVGGplus-L2pse
-            loss = 0.0
-            for name, pred in outputs.items():
-                if 'aux' in name:
-                    loss += 0.1*criterion(pred, targets)
-                else:
-                    loss += criterion(pred, targets)
-        else:
-            loss = criterion(outputs, targets) 
-            
         optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        if 'sam' in config.TRAIN.OPTIMIZER.NAME: # use SAM optimizer, with one step closure
+            def closure():
+                disable_running_stats(model) # for batch norm, suggested in sam README
+                loss = criterion(model(images), targets)
+                loss.backward()
+                return loss
+            enable_running_stats(model) # for batch norm
+            loss = criterion(model(images), targets)
+            loss.backward()
+            optimizer.step(closure)
+        else:
+            outputs = model(images)
+            if type(outputs) is dict: # for RepVGGplus-L2pse
+                loss = 0.0
+                for name, pred in outputs.items():
+                    if 'aux' in name:
+                        loss += 0.1*criterion(pred, targets)
+                    else:
+                        loss += criterion(pred, targets)
+            else:
+                loss = criterion(outputs, targets) 
+            loss.backward() # compute gradient
+            optimizer.step() # updata params
+            
         if config.TRAIN.LR_SCHEDULER.NAME == 'cosine':
             lr_scheduler.step_update(epoch*num_steps*idx)
         
@@ -339,11 +349,12 @@ def _test_drop_attn():
 if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
-    #main()
+    main()
     #_test_lr()
     #_test_gamma()     
     #_test_mixup()
     #_test_drop_attn()
+    '''
     archs = ['NonMultiCLSFER_onlyCLS', 'NonMultiCLSFER_stage3', 'NonMultiCLSFER_catAfterMlp', 'CLSFERBaseline_stage3']
     for arch in archs:
         config.defrost()
@@ -352,4 +363,5 @@ if __name__ == '__main__':
         config.freeze()
         #_test_lr()
         main()
+        '''
     

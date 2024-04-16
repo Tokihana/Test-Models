@@ -15,16 +15,13 @@ MODEL:
     ARCH: 'NonMultiCLSFER_addpatches'
     DEPTH: 8
     
-MODE:
-    THROUGHPUT: True
-    
 TRAIN:
     EPOCHS: 3
     BASE_LR: 5e-5
     CONFUSION_MATRIX: True
     
     OPTIMIZER:
-        NAME: 'Adam'
+        NAME: 'samAdam'
         EPS: 1e-8
         BETAS: (0.9, 0.999)
         
