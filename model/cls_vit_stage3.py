@@ -289,7 +289,7 @@ class MultiScaleCLSFER(nn.Module):
         # output
         x_cls = x[:, 0, ...]
         # head
-        x = self.se(x)
+        x_cls = self.se(x_cls)
         out = self.head(x_cls)
         return out
     

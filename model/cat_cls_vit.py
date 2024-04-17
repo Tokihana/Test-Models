@@ -8,6 +8,22 @@ from timm.models.vision_transformer import LayerScale
 from .ir50_stage3 import iresnet50_stage3
 from .cls_vit_stage3 import CLSAttention, NonMultiCLSBlock
 
+class SE_block(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        self.linear1 = torch.nn.Linear(input_dim, input_dim)
+        self.relu = nn.ReLU()
+        self.linear2 = torch.nn.Linear(input_dim, input_dim)
+        self.sigmod = nn.Sigmoid()
+
+    def forward(self, x):
+        x1 = self.linear1(x)
+        x1 = self.relu(x1)
+        x1 = self.linear2(x1)
+        x1 = self.sigmod(x1)
+        x = x * x1
+        return x
+
 class NonMultiCLSBlock_catAfterMlp(nn.Module):
     def __init__(self, dim: int,
                 num_heads: int=8,
@@ -90,6 +106,7 @@ class NonMultiCLSFER_stage3(nn.Module):
                  add_to_patch=add_to_patch)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
+        self.se = SE_block(input_dim=512)
         self.head = nn.Linear(embed_dim, num_classes) 
             
     def forward(self, x):
@@ -108,6 +125,7 @@ class NonMultiCLSFER_stage3(nn.Module):
         # output
         x_cls = x[:, 0, ...]
         # head
+        x_cls = self.se(x_cls)
         out = self.head(x_cls)
         return out
     

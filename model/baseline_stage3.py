@@ -38,6 +38,7 @@ class Baseline_stage3(nn.Module):
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
+        self.se = SE_block(input_dim=512)
         self.head = nn.Linear(embed_dim, num_classes) 
             
     def forward(self, x):
@@ -56,6 +57,7 @@ class Baseline_stage3(nn.Module):
         # output
         x_cls = x[:, 0, ...]
         # head
+        x_cls = self.se(x_cls)
         out = self.head(x_cls)
         return out
         
