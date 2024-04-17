@@ -7,6 +7,22 @@ from timm.models.vision_transformer import Block
 
 from .ir50_stage3 import iresnet50_stage3
 
+class SE_block(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        self.linear1 = torch.nn.Linear(input_dim, input_dim)
+        self.relu = nn.ReLU()
+        self.linear2 = torch.nn.Linear(input_dim, input_dim)
+        self.sigmod = nn.Sigmoid()
+
+    def forward(self, x):
+        x1 = self.linear1(x)
+        x1 = self.relu(x1)
+        x1 = self.linear2(x1)
+        x1 = self.sigmod(x1)
+        x = x * x1
+        return x
+
 class Baseline_stage3(nn.Module):
     def __init__(self,
                  img_size: int=224,
