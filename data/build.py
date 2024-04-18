@@ -92,7 +92,7 @@ def _get_affectnet_transform(img_size=224):
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
-        v2.RandomErasing(scale=(0.02, 0.1)),
+        v2.RandomErasing(p=1., scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
         v2.Resize((img_size, img_size)),
@@ -107,7 +107,7 @@ def _get_ferplus_transform(img_size=224):
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
-        v2.RandomErasing(scale=(0.02, 0.1)),
+        v2.RandomErasing(p=1., scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
         v2.Resize((img_size, img_size)),

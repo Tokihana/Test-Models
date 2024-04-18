@@ -12,6 +12,8 @@ def build_criterion(config):
         criterion = LabelSmoothingCrossEntropy(smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
     elif config.TRAIN.CRITERION.NAME == 'CrossEntropy':
         criterion = torch.nn.CrossEntropyLoss()
+    elif config.TRAIN.CRITERION.NAME == 'POSTERCrossEntropy':
+        criterion = POSTERCrossEntropy(smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
     return criterion
 
 class LabelSmoothingCrossEntropy(nn.Module):
@@ -31,3 +33,13 @@ class LabelSmoothingCrossEntropy(nn.Module):
         smooth_loss = -logprobs.mean(dim=-1)
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         return loss.mean()
+    
+class POSTERCrossEntropy(nn.Module):
+    def __init__(self, smoothing=0.1):
+        super(POSTERCrossEntropy, self).__init__()
+        assert smoothing < 1.0
+        self.CE = torch.nn.CrossEntropyLoss()
+        self.LSCE = LabelSmoothingCrossEntropy(smoothing)
+        
+    def forward(self, x: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        return 2 * self.LSCE(x, target) + self.CE(x, target)

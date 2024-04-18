@@ -172,11 +172,11 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         optimizer.zero_grad()
         if 'sam' in config.TRAIN.OPTIMIZER.NAME: # use SAM optimizer, with one step closure
             def closure():
-                disable_running_stats(model) # for batch norm, suggested in sam README
+                #disable_running_stats(model) # for batch norm, suggested in sam README
                 loss = criterion(model(images), targets)
                 loss.backward()
                 return loss
-            enable_running_stats(model) # for batch norm
+            #enable_running_stats(model) # for batch norm
             loss = criterion(model(images), targets)
             loss.backward()
             optimizer.step(closure)
@@ -219,8 +219,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         
     
 @torch.no_grad()
-def validate(config, model, data_loader, logger):
-    criterion = nn.CrossEntropyLoss()
+def validate(config, model, data_loader, criterion, logger):
     model.eval()
     
     batch_avg = AverageMeter()

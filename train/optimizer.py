@@ -12,7 +12,8 @@ def build_optimizer(config, model):
     if hasattr(model, 'no_weight_decay_keywords'):
         skip = model.no_weight_decay_keywords()
         
-    parameters = set_weight_decay(model, skip, skip_keywords)
+    #parameters = set_weight_decay(model, skip, skip_keywords)
+    parameters = model.parameters()
     
     opt_lower = config.TRAIN.OPTIMIZER.NAME.lower()
     optimizer = None
@@ -23,7 +24,7 @@ def build_optimizer(config, model):
     elif opt_lower == 'adamw':
         optimizer = optim.AdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS, lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
     if opt_lower == 'samadam':
-        optimizer = SAM(parameters, base_optimizer=optim.Adam, rho=0.5, adaptive=True, 
+        optimizer = SAM(parameters, base_optimizer=optim.Adam, rho=0.05, adaptive=False, 
                         lr=config.TRAIN.BASE_LR, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,)
     
     return optimizer
