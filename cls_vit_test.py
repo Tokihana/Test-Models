@@ -182,6 +182,27 @@ class CLSViTTests(unittest.TestCase):
         print(f'After Block shape: {out.shape}')
         self.assertEqual(out.shape, torch.Size([B, 1, C]))
         
+class MultiScaleTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        config.defrost()
+        config.MODEL.ARCH = 'MultiScaleCLSFER'
+        config.freeze()
+        self.model = create_model(args, config)
+        self.input = torch.rand((1, 3, 224, 224))
+        self.train_loader, self.val_loader, self.mix_fn = build_loader(config)
+    def single_fig_running_test(self):
+        logger.info(self.model.parameters())
+        output = self.model(self.input)
+        logger.info(output)
+        logger.info(output.shape)
+    def loader_running_test(self):
+        for images, targets in self.val_loader:
+            break
+        logger.info(images.shape)
+        logger.info(targets.shape)
+        output = self.model(images)
+        logger.info(output.shape)
         
             
 

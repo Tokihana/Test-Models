@@ -4,9 +4,10 @@ from .iresnet import iresnet50
 from .baseline import Baseline
 from .baseline_stage3 import Baseline_stage3
 from .cls_vit import NonMultiCLSFER
-from .cls_vit_stage3 import get_NonMultiCLSFER_stage3,  get_MultiScaleCLSFER, get_NonMultiCLSFER_onlyCLS
+from .cls_vit_stage3 import get_NonMultiCLSFER_stage3, get_NonMultiCLSFER_onlyCLS
 from .repeat_cls_vit import get_RepeatCLSFER, get_RepeatAttentionCLSFER, get_ExpandCLSFER
 from .cat_cls_vit import get_NonMultiCLSFER_catAfterMlp, get_NonMutiCLSFER_addpatches
+from .multi_scale_cls_vit import get_MultiScaleCLSFER
 
 def create_model(args, config):
     model = None
@@ -50,6 +51,8 @@ def create_model(args, config):
         model = get_NonMultiCLSFER_catAfterMlp(config)
     elif config.MODEL.ARCH == 'NonMultiCLSFER_addpatches':
         model = get_NonMutiCLSFER_addpatches(config)
+    else:
+        raise Exception('Unknown model architecture')
         
     return model
 

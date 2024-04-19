@@ -3,17 +3,20 @@ SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'CLSFERNonMulti_SearchDepth&LR'
     EXPERIMENT_PATH: './results/RAF-DB_CLSFERNonMulti_SearchDepth&LR_depth8_ep1e-8'
-    SAVE_FREQ: 30
+    SAVE_FREQ: 100
     
 DATA:
     IMG_SIZE: 112
     BATCH_SIZE: 5
-    DATASET: 'RAF-DB'
-    DATA_PATH: '../FERdatasets/RAF-DB'
+    DATASET: 'MiniTest'
+    DATA_PATH: '../FERdatasets/MiniTest'
     
 MODEL:
-    ARCH: 'NonMultiCLSFER_addpatches'
+    ARCH: 'MultiScaleCLSFER'
     DEPTH: 8
+    
+MODE:
+    THROUGHPUT: True
     
 TRAIN:
     EPOCHS: 3
@@ -27,7 +30,7 @@ TRAIN:
         
     LR_SCHEDULER:
         NAME: 'exponential'
-        GAMMA: 0.955
+        GAMMA: 0.98
         
     CRITERION:
         NAME: 'CrossEntropy'

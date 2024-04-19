@@ -129,7 +129,7 @@ def main():
             save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         # validate
         if val_loader is not None:
-            acc, loss = validate(config, model, val_loader, logger)
+            acc, loss = validate(config=config, model=model, data_loader=val_loader, criterion=criterion, logger=logger)
             max_acc = max(max_acc, acc)
             wandb.log({'acc':acc, 
                        'train loss': train_loss, 
