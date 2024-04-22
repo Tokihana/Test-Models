@@ -1,6 +1,7 @@
+from typing import Optional
+# third-party dependencies
 import torch
 import torch.nn as nn
-# third-party dependencies
 from timm.layers import DropPath, Mlp
 # local dependencies
 from .ir50_stage3 import iresnet50_stage3
@@ -189,6 +190,7 @@ class NonMultiCLSFER_stage3(nn.Module):
                  attn_drop: float = 0.,
                  proj_drop: float = 0.,
                  drop_path: float = 0.,
+                 init_values: Optional[float]=None,
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
                  act_layer: nn.Module = nn.GELU,

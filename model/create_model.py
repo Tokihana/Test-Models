@@ -8,6 +8,7 @@ from .cls_vit_stage3 import get_NonMultiCLSFER_stage3, get_NonMultiCLSFER_onlyCL
 from .repeat_cls_vit import get_RepeatCLSFER, get_RepeatAttentionCLSFER, get_ExpandCLSFER
 from .cat_cls_vit import get_NonMultiCLSFER_catAfterMlp, get_NonMutiCLSFER_addpatches
 from .multi_scale_cls_vit import get_MultiScaleCLSFER
+from .conv_proj_attn import get_NonMutiCLSFER_conv_proj
 
 def create_model(args, config):
     model = None
@@ -51,6 +52,8 @@ def create_model(args, config):
         model = get_NonMultiCLSFER_catAfterMlp(config)
     elif config.MODEL.ARCH == 'NonMultiCLSFER_addpatches':
         model = get_NonMutiCLSFER_addpatches(config)
+    elif config.MODEL.ARCH == 'conv_proj_NonMultiCLSFER':
+        model = get_NonMutiCLSFER_conv_proj(config)
     else:
         raise Exception('Unknown model architecture')
         

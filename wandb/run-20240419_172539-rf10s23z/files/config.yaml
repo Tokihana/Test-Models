@@ -1,0 +1,114 @@
+wandb_version: 1
+
+experiment name:
+  desc: null
+  value: RAF-DB_200epoch_conv_proj
+dataset:
+  desc: null
+  value: RAF-DB
+batch size:
+  desc: null
+  value: 256
+img size:
+  desc: null
+  value: 112
+num workers:
+  desc: null
+  value: 8
+pin memory:
+  desc: null
+  value: true
+architecture:
+  desc: null
+  value: conv_proj_NonMultiCLSFER
+encoder depth:
+  desc: null
+  value: 8
+num classes:
+  desc: null
+  value: 7
+mlp ratio:
+  desc: null
+  value: 4.0
+attn drop:
+  desc: null
+  value: 0.0
+proj drop:
+  desc: null
+  value: 0.0
+drop path:
+  desc: null
+  value: 0.5
+learning_rate:
+  desc: null
+  value: 0.00010000000000000002
+epochs:
+  desc: null
+  value: 30
+resume:
+  desc: null
+  value: ''
+criterion:
+  desc: null
+  value: POSTERCrossEntropy
+LabelSmoothing:
+  desc: null
+  value: 0.1
+optimizer:
+  desc: null
+  value: samAdam
+optimizer eps:
+  desc: null
+  value: 1.0e-08
+optimizer beta1:
+  desc: null
+  value: 0.9
+optimizer beta2:
+  desc: null
+  value: 0.999
+optimizer momentum:
+  desc: null
+  value: 0.9
+scheduler:
+  desc: null
+  value: exponential
+scheduler gamma:
+  desc: null
+  value: 0.98
+reduce factor:
+  desc: null
+  value: 0.5
+mixup alpha:
+  desc: null
+  value: 0.0
+_wandb:
+  desc: null
+  value:
+    python_version: 3.9.13
+    cli_version: 0.16.6
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1713518739.0
+    t:
+      1:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 63
+      2:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 63
+      3:
+      - 16
+      - 23
+      4: 3.9.13
+      5: 0.16.6
+      8:
+      - 3
+      - 5
+      13: windows-amd64

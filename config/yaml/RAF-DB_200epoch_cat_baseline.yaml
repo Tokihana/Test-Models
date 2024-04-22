@@ -1,0 +1,39 @@
+# RAF-DB_200epoch_cat_baseline.yaml
+SYSTEM:
+    PROJECT_NAME: 'CLSFERBaseline'
+    EXPERIMENT_NAME: 'RAF-DB_200epoch_cat_baseline'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_200epoch_cat_baseline_sam'
+    SAVE_FREQ: 100
+    
+DATA:
+    BATCH_SIZE: 256
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../autodl-tmp/RAF-DB'
+    IMG_SIZE: 112
+    
+MODEL:
+    ARCH: 'NonMultiCLSFER_addpatches'
+    DEPTH: 8
+    DROP_PATH: 0.5
+    MLP_RATIO: 4.
+    
+TRAIN:
+    EPOCHS: 30
+    BASE_LR: 4e-5
+    
+    OPTIMIZER:
+        NAME: 'samAdam'
+        EPS: 1e-8
+        BETAS: (0.9, 0.999)
+        
+    LR_SCHEDULER:
+        NAME: 'exponential'
+        
+    CRITERION:
+        NAME: 'POSTERCrossEntropy'
+        LABEL_SMOOTHING: 0.1
+        
+AUG:
+    MIXUP: 0.
+    
+    

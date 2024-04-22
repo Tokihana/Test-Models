@@ -131,6 +131,8 @@ _C.TRAIN.OPTIMIZER.EPS = 1e-8
 _C.TRAIN.OPTIMIZER.BETAS = (0.9, 0.999)
 # SGD momentum
 _C.TRAIN.OPTIMIZER.MOMENTUM = 0.9
+# SAM rho
+_C.TRAIN.OPTIMIZER.RHO = 0.05
 
 ## ----------------------------------------------
 # AUGMENTATION settings

@@ -110,7 +110,8 @@ def _return_pop_keys(config, checkpoint):
                     
 @torch.no_grad()    
 def compute_flop_params(config, model, logger):
-    img = torch.rand((1, 3, 224, 224))
+    #img = torch.rand((1, 3, 224, 224))
+    img = torch.rand((1, 3, 112, 112))
     if 'RepVGG' in config.MODEL.ARCH:
         model.switch_repvggplus_to_deploy()
     flops, params = profile(model, inputs=(img.cuda(),))
