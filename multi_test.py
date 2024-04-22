@@ -16,6 +16,7 @@ from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune
 from model import create_model
 from main import validate
 from model.ir50_multi import iresnet50_multi
+from model.cross_cls_fusion import get_CrossCLSFER
 
 def parse_option():
     parser = argparse.ArgumentParser()
@@ -36,6 +37,15 @@ class MultiScaleResNetTests(unittest.TestCase):
     def test_running(self): # note: all test def name should start with 'test'
         out = self.ir_back(self.input)
         print([o.shape for o in out])
+    
+class CrossCLSTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.CrossFER = get_CrossCLSFER(config)
+        self.input = torch.rand((5, 3, 112, 112)) # batch size must larger than 1, for batch norm needs
+    def test_running(self):
+        out = self.CrossFER(self.input)
+        print(out)
 
 if __name__ == '__main__':
     # make config

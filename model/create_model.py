@@ -9,6 +9,7 @@ from .repeat_cls_vit import get_RepeatCLSFER, get_RepeatAttentionCLSFER, get_Exp
 from .cat_cls_vit import get_NonMultiCLSFER_catAfterMlp, get_NonMutiCLSFER_addpatches
 from .multi_scale_cls_vit import get_MultiScaleCLSFER
 from .conv_proj_attn import get_NonMutiCLSFER_conv_proj
+from .cross_cls_fusion import get_CrossCLSFER
 
 def create_model(args, config):
     model = None
@@ -54,6 +55,8 @@ def create_model(args, config):
         model = get_NonMutiCLSFER_addpatches(config)
     elif config.MODEL.ARCH == 'conv_proj_NonMultiCLSFER':
         model = get_NonMutiCLSFER_conv_proj(config)
+    elif config.MODEL.ARCH == 'cross_cls_CLSFER':
+        model = get_CrossCLSFER(config)
     else:
         raise Exception('Unknown model architecture')
         
