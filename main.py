@@ -19,7 +19,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/RAF-DB_200epoch_conv_proj.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/test.yaml', type=str, help='path to config yaml')
     parser.add_argument('--use-checkpoint', action='store_true', help="whether to use gradient checkpointing to save memory")
 
     args, unparsed = parser.parse_known_args()
@@ -348,8 +348,8 @@ def _test_drop_attn():
 if __name__ == '__main__':
     args, config = parse_option()
     logger = create_logger(config.SYSTEM.LOG, name='testlog.log')
-    #main()
-    _test_lr()
+    main()
+    #_test_lr()
     #_test_gamma()     
     #_test_mixup()
     #_test_drop_attn()

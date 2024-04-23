@@ -1,27 +1,23 @@
 # test.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'CLSFERNonMulti_SearchDepth&LR'
-    EXPERIMENT_PATH: './results/RAF-DB_CLSFERNonMulti_SearchDepth&LR_depth8_ep1e-8'
+    EXPERIMENT_NAME: 'CLSFER_Cross'
+    EXPERIMENT_PATH: './results/RAF-DB_CLSFERCross'
     SAVE_FREQ: 100
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 5
-    DATASET: 'MiniTest'
-    DATA_PATH: '../FERdatasets/MiniTest'
+    BATCH_SIZE: 128
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../FERdatasets/RAF-DB'
     
 MODEL:
-    ARCH: 'MultiScaleCLSFER'
+    ARCH: 'cross_cls_CLSFER'
     DEPTH: 8
     
-MODE:
-    THROUGHPUT: True
-    
 TRAIN:
-    EPOCHS: 3
-    BASE_LR: 5e-5
-    CONFUSION_MATRIX: True
+    EPOCHS: 20
+    BASE_LR: 1e-4
     
     OPTIMIZER:
         NAME: 'samAdam'
@@ -33,9 +29,9 @@ TRAIN:
         GAMMA: 0.98
         
     CRITERION:
-        NAME: 'CrossEntropy'
+        NAME: 'POSTERCrossEntropy'
         
 AUG:
-    MIXUP: 1.0
+    MIXUP: 0.
     
     

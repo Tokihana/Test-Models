@@ -119,7 +119,7 @@ class CrossCLSFER(nn.Module):
         x = self.blocks(x)
         # forward head
         x_img, x_lm = x
-        x_cls = x_img[:, 0:1, ...] + x_lm[:, 0:1, ...]
+        x_cls = x_img[:, 0, ...] + x_lm[:, 0, ...]
         x_cls = self.norm(x_cls)
         x_cls = self.se(x_cls)
         out = self.head(x_cls)
@@ -134,4 +134,16 @@ def get_CrossCLSFER(config):
                             proj_drop=config.MODEL.PROJ_DROP,
                             drop_path=config.MODEL.DROP_PATH,
                             init_values=config.MODEL.LAYER_SCALE,)
+    return model
+
+def get_CrossAddpatches(config):
+    model = CrossCLSFER(img_size=config.DATA.IMG_SIZE,
+                            num_classes=config.MODEL.NUM_CLASS, 
+                            depth=config.MODEL.DEPTH, 
+                            mlp_ratio=config.MODEL.MLP_RATIO,
+                            attn_drop=config.MODEL.ATTN_DROP,
+                            proj_drop=config.MODEL.PROJ_DROP,
+                            drop_path=config.MODEL.DROP_PATH,
+                            init_values=config.MODEL.LAYER_SCALE,
+                       add_to_patch=True)
     return model
