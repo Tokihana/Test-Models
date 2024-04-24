@@ -204,6 +204,16 @@ class MultiScaleTests(unittest.TestCase):
         output = self.model(images)
         logger.info(output.shape)
         
+class CLSFER_14x14_Tests(unittest.TestCase):
+    def test_14x14_models(self):
+        test_input = torch.rand((5, 3, 112, 112))
+        for arch in ['14x14_CLSFER_baseline', '14x14_CLSFER_catAfterMlp', '14x14_CLSFER_addpatches']:
+            config.defrost()
+            config.MODEL.ARCH = arch
+            config.freeze()
+            model = create_model(args, config)
+            out = model(test_input)
+            logger.info(f'Arch: {arch}, out: {out.shape}')
             
 
 if __name__ == '__main__':

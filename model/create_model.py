@@ -10,6 +10,7 @@ from .cat_cls_vit import get_NonMultiCLSFER_catAfterMlp, get_NonMutiCLSFER_addpa
 from .multi_scale_cls_vit import get_MultiScaleCLSFER
 from .conv_proj_attn import get_NonMutiCLSFER_conv_proj
 from .cross_cls_fusion import get_CrossCLSFER, get_CrossAddpatches
+from .cls_with_14 import get_14x14_model
 
 def create_model(args, config):
     model = None
@@ -59,6 +60,8 @@ def create_model(args, config):
         model = get_CrossCLSFER(config)
     elif config.MODEL.ARCH == 'cross_cls_addpatches':
         model = get_CrossAddpatches(config)
+    elif '14x14' in config.MODEL.ARCH:
+        model = get_14x14_model(config)
     else:
         raise Exception('Unknown model architecture')
         
