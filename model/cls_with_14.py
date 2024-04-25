@@ -5,19 +5,19 @@ import torch
 import torch.nn as nn
 from timm.models.vision_transformer import Block # original vit block
 from timm.layers.helpers import make_divisible
-from timm.layers.create_layer import create_act_layer
 # local  
 from .ir50_14 import iresnet50
 from .cat_cls_vit import NonMultiCLSBlock_catAfterMlp
 
 class SE_block(nn.Module):
     def __init__(self, channels, rd_ratio=1./16, rd_divisor=8, bias=True):
+        super().__init__()
         rd_chans = make_divisible(channels * rd_ratio, rd_divisor, round_limit=0.)
         self.fc1 = nn.Conv1d(channels, rd_chans, kernel_size=1, bias=bias)
         self.bn = nn.BatchNorm1d(rd_chans)
         self.act_layer = nn.ReLU()
         self.fc2 = nn.Conv1d(rd_chans, channels, kernel_size=1, bias=bias)
-        self.sigmod = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
         
     def forward(self, x):
         '''
@@ -66,7 +66,7 @@ class CLSFER(nn.Module):
                  add_to_patch=add_to_patch)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.se = SE_block(channels=embed_dim)
+        self.se = SE_block(channels=embed_len)
         self.head = nn.Linear(embed_dim, num_classes) 
         
     def forward(self, x):
@@ -74,6 +74,8 @@ class CLSFER(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
+        # squeeze channel dimension and scale tokens
+        x_embed = self.se(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
@@ -83,9 +85,8 @@ class CLSFER(nn.Module):
         x = self.blocks(x) 
         x = self.norm(x)
         # output
-        x_cls = x[:, 0, ...]
+        x_cls = x[:, 0:1, ...]
         # head
-        x_cls = self.se(x_cls)
         out = self.head(x_cls)
         return out
 
@@ -120,7 +121,7 @@ class Baseline_14(nn.Module):
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.se = SE_block(channels=embed_dim)
+        self.se = SE_block(channels=embed_len)
         self.head = nn.Linear(embed_dim, num_classes) 
             
     def forward(self, x):
@@ -128,6 +129,8 @@ class Baseline_14(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
+        # squeeze channel dimension and scale tokens
+        x_embed = self.se(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
@@ -139,7 +142,6 @@ class Baseline_14(nn.Module):
         # output
         x_cls = x[:, 0, ...]
         # head
-        x_cls = self.se(x_cls)
         out = self.head(x_cls)
         return out
     
