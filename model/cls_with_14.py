@@ -4,9 +4,30 @@ from typing import Optional
 import torch 
 import torch.nn as nn
 from timm.models.vision_transformer import Block # original vit block
+from timm.layers.helpers import make_divisible
+from timm.layers.create_layer import create_act_layer
 # local  
 from .ir50_14 import iresnet50
-from .cat_cls_vit import NonMultiCLSBlock_catAfterMlp, SE_block
+from .cat_cls_vit import NonMultiCLSBlock_catAfterMlp
+
+class SE_block(nn.Module):
+    def __init__(self, channels, rd_ratio=1./16, rd_divisor=8, bias=True):
+        rd_chans = make_divisible(channels * rd_ratio, rd_divisor, round_limit=0.)
+        self.fc1 = nn.Conv1d(channels, rd_chans, kernel_size=1, bias=bias)
+        self.bn = nn.BatchNorm1d(rd_chans)
+        self.act_layer = nn.ReLU()
+        self.fc2 = nn.Conv1d(rd_chans, channels, kernel_size=1, bias=bias)
+        self.sigmod = nn.Sigmoid()
+        
+    def forward(self, x):
+        '''
+        x (B, N, C)
+        '''
+        # squeeze, BNC -> B1C -> BC1
+        x_se = x.mean(dim=1, keepdim=True).permute(0, 2, 1)
+        x_se = self.sigmoid(self.fc2(self.act_layer(self.bn(self.fc1(x_se)))))
+        x = x * x_se.permute(0, 2, 1)
+        return x
 
 class CLSFER(nn.Module):
     def __init__(self,
@@ -45,7 +66,7 @@ class CLSFER(nn.Module):
                  add_to_patch=add_to_patch)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.se = SE_block(input_dim=embed_dim)
+        self.se = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
         
     def forward(self, x):
@@ -99,7 +120,7 @@ class Baseline_14(nn.Module):
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.se = SE_block(input_dim=embed_dim)
+        self.se = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
             
     def forward(self, x):
