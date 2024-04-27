@@ -23,9 +23,12 @@ def build_optimizer(config, model):
         optimizer = optim.Adam(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS, lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
     elif opt_lower == 'adamw':
         optimizer = optim.AdamW(parameters, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS, lr=config.TRAIN.BASE_LR, weight_decay=config.TRAIN.WEIGHT_DECAY)
-    if opt_lower == 'samadam':
+    elif opt_lower == 'samadam':
         optimizer = SAM(parameters, base_optimizer=optim.Adam, rho=config.TRAIN.OPTIMIZER.RHO, adaptive=False, 
                         lr=config.TRAIN.BASE_LR, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,)
+    elif opt_lower == 'samsgd':
+        optimizer = SAM(parameters, base_optimizer=optim.SGD, rho=config.TRAIN.OPTIMIZER.RHO, adaptive=False,
+                        lr=config.TRAIN.BASE_LR, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True, weight_decay=config.TRAIN.WEIGHT_DECAY)
     
     return optimizer
 
