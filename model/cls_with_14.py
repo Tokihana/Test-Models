@@ -86,12 +86,12 @@ class CLSFER(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
-        # squeeze channel dimension and scale tokens
-        x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
         x = x + self.pos_embed
+        # squeeze channel dimension and scale tokens
+        x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
 
         # attention blocks
         x = self.blocks(x) 
@@ -155,12 +155,12 @@ class Baseline_14(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
-        # squeeze channel dimension and scale tokens
-        x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
         x = x + self.pos_embed
+        # squeeze channel dimension and scale tokens
+        x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
 
         # attention blocks
         x = self.blocks(x) 
