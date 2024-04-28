@@ -77,7 +77,8 @@ class CLSFER(nn.Module):
                  add_to_patch=add_to_patch)
                 for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.se = SE_block(channels=embed_len)
+        self.tokense = SE_block(channels=embed_len)
+        self.headse = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
         
     def forward(self, x):
@@ -86,7 +87,7 @@ class CLSFER(nn.Module):
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
         # squeeze channel dimension and scale tokens
-        x_embed = self.se(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
+        x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
@@ -96,10 +97,11 @@ class CLSFER(nn.Module):
         x = self.blocks(x) 
         x = self.norm(x)
         # output
-        x_cls = x[:, 0, ...]
+        x_cls = x[:, 0:1, ...]
         # head
+        x_cls = self.headse(x_cls)
         out = self.head(x_cls)
-        return out
+        return out.squeeze()
 
 class Baseline_14(nn.Module):
     def __init__(self,
@@ -144,7 +146,8 @@ class Baseline_14(nn.Module):
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
                 for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.se = SE_block(channels=embed_len)
+        self.tokense = SE_block(channels=embed_len)
+        self.headse = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
             
     def forward(self, x):
@@ -153,7 +156,7 @@ class Baseline_14(nn.Module):
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
         # squeeze channel dimension and scale tokens
-        x_embed = self.se(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
+        x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         # cat cls token, add pos embed
         x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
@@ -163,10 +166,11 @@ class Baseline_14(nn.Module):
         x = self.blocks(x) 
         x = self.norm(x)
         # output
-        x_cls = x[:, 0, ...]
+        x_cls = x[:, 0:1, ...]
         # head
+        x_cls = self.headse(x_cls)
         out = self.head(x_cls)
-        return out
+        return out.squeeze()
     
 
 def _get_14x14_CLSFER_baseline(config):

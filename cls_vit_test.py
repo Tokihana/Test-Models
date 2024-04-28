@@ -205,24 +205,31 @@ class MultiScaleTests(unittest.TestCase):
         logger.info(output.shape)
         
 class CLSFER_14x14_Tests(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.criterion = nn.CrossEntropyLoss()
     def test_14x14_models(self):
         test_input = torch.rand((5, 3, 112, 112))
+        test_target = torch.rand((5, config.MODEL.NUM_CLASS))
         for arch in ['14x14_CLSFER_baseline', '14x14_CLSFER_catAfterMlp', '14x14_CLSFER_addpatches']:
             config.defrost()
             config.MODEL.ARCH = arch
             config.freeze()
             model = create_model(args, config)
             out = model(test_input)
-            logger.info(f'Arch: {arch}, out: {out.shape}')
+            loss = self.criterion(out, test_target)
+            logger.info(f'Arch: {arch}, out: {out.shape}, loss: {loss:.3f}')
     def test_14x14se_models(self):
         test_input = torch.rand((5, 3, 112, 112))
+        test_target = torch.rand((5, config.MODEL.NUM_CLASS))
         for arch in ['14x14se_CLSFER_baseline', '14x14se_CLSFER_catAfterMlp', '14x14se_CLSFER_addpatches']:
             config.defrost()
             config.MODEL.ARCH = arch
             config.freeze()
             model = create_model(args, config)
             out = model(test_input)
-            logger.info(f'Arch: {arch}, out: {out.shape}')
+            loss = self.criterion(out, test_target)
+            logger.info(f'Arch: {arch}, out: {out.shape}, loss: {loss:.3f}')
             
 
 if __name__ == '__main__':
