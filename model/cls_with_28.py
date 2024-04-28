@@ -6,7 +6,7 @@ import torch.nn as nn
 from timm.models.vision_transformer import Block # original vit block
 from timm.layers.helpers import make_divisible
 # local  
-from .ir50_14 import iresnet50
+from .ir50_28 import iresnet50
 from .cat_cls_vit import NonMultiCLSBlock_catAfterMlp
 
 class SE_block(nn.Module):
@@ -32,8 +32,8 @@ class SE_block(nn.Module):
 class CLSFER(nn.Module):
     def __init__(self,
                  img_size: int=112,
-                 embed_len: int=196,
-                 embed_dim: int=256,
+                 embed_len: int=784,
+                 embed_dim: int=128,
                  num_heads: int = 8,
                  mlp_ratio: float = 4.,
                  qkv_bias=False,
@@ -103,11 +103,11 @@ class CLSFER(nn.Module):
         out = self.head(x_cls)
         return out.squeeze()
 
-class Baseline_14(nn.Module):
+class Baseline_28(nn.Module):
     def __init__(self,
                  img_size: int=112,
-                 embed_len: int=196,
-                 embed_dim: int=256,
+                 embed_len: int=784,
+                 embed_dim: int=128,
                  num_heads: int = 8,
                  mlp_ratio: float = 4.,
                  qkv_bias=False,
@@ -120,7 +120,7 @@ class Baseline_14(nn.Module):
                  num_classes: int = 7,
                  norm_layer: nn.Module = nn.LayerNorm,
                 encoder_se: bool=False):
-        super(Baseline_14, self).__init__()
+        super(Baseline_28, self).__init__()
         self.irback = iresnet50(num_features=num_classes)
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
@@ -173,8 +173,8 @@ class Baseline_14(nn.Module):
         return out.squeeze()
     
 
-def _get_14x14_CLSFER_baseline(config):
-    model = Baseline_14(num_classes=config.MODEL.NUM_CLASS, 
+def _get_28x28_CLSFER_baseline(config):
+    model = Baseline_28(num_classes=config.MODEL.NUM_CLASS, 
                                 depth=config.MODEL.DEPTH, 
                                 mlp_ratio=config.MODEL.MLP_RATIO,
                                 attn_drop=config.MODEL.ATTN_DROP,
@@ -182,7 +182,7 @@ def _get_14x14_CLSFER_baseline(config):
                                 init_values=config.MODEL.LAYER_SCALE)
     return model
         
-def _get_14x14_CLSFER_catAfterMlp(config):
+def _get_28x28_CLSFER_catAfterMlp(config):
     model = CLSFER(img_size=config.DATA.IMG_SIZE,
                             num_classes=config.MODEL.NUM_CLASS, 
                             depth=config.MODEL.DEPTH, 
@@ -195,7 +195,7 @@ def _get_14x14_CLSFER_catAfterMlp(config):
                             add_to_patch=False)
     return model
 
-def _get_14x14_CLSFER_addpatches(config):
+def _get_28x28_CLSFER_addpatches(config):
     model = CLSFER(img_size=config.DATA.IMG_SIZE,
                             num_classes=config.MODEL.NUM_CLASS, 
                             depth=config.MODEL.DEPTH, 
@@ -208,8 +208,8 @@ def _get_14x14_CLSFER_addpatches(config):
                             add_to_patch=True)
     return model
 
-def _get_14x14se_CLSFER_baseline(config):
-    model = Baseline_14(num_classes=config.MODEL.NUM_CLASS, 
+def _get_28x28se_CLSFER_baseline(config):
+    model = Baseline_28(num_classes=config.MODEL.NUM_CLASS, 
                                 depth=config.MODEL.DEPTH, 
                                 mlp_ratio=config.MODEL.MLP_RATIO,
                                 attn_drop=config.MODEL.ATTN_DROP,
@@ -218,7 +218,7 @@ def _get_14x14se_CLSFER_baseline(config):
                        encoder_se=True)
     return model
         
-def _get_14x14se_CLSFER_catAfterMlp(config):
+def _get_28x28se_CLSFER_catAfterMlp(config):
     model = CLSFER(img_size=config.DATA.IMG_SIZE,
                             num_classes=config.MODEL.NUM_CLASS, 
                             depth=config.MODEL.DEPTH, 
@@ -232,7 +232,7 @@ def _get_14x14se_CLSFER_catAfterMlp(config):
                             encoder_se=True)
     return model
 
-def _get_14x14se_CLSFER_addpatches(config):
+def _get_28x28se_CLSFER_addpatches(config):
     model = CLSFER(img_size=config.DATA.IMG_SIZE,
                             num_classes=config.MODEL.NUM_CLASS, 
                             depth=config.MODEL.DEPTH, 
@@ -247,17 +247,17 @@ def _get_14x14se_CLSFER_addpatches(config):
     return model
 
 
-def get_14x14_model(config):
-    if config.MODEL.ARCH == '14x14_CLSFER_baseline':
-        model = _get_14x14_CLSFER_baseline(config)
-    elif config.MODEL.ARCH == '14x14_CLSFER_catAfterMlp':
-        model = _get_14x14_CLSFER_catAfterMlp(config)
-    elif config.MODEL.ARCH == '14x14_CLSFER_addpatches':
-        model = _get_14x14_CLSFER_addpatches(config)
-    elif config.MODEL.ARCH == '14x14se_CLSFER_baseline':
-        model = _get_14x14se_CLSFER_baseline(config)
-    elif config.MODEL.ARCH == '14x14se_CLSFER_catAfterMlp':
-        model = _get_14x14se_CLSFER_catAfterMlp(config)
-    elif config.MODEL.ARCH == '14x14se_CLSFER_addpatches':
-        model = _get_14x14se_CLSFER_addpatches(config)
+def get_28x28_model(config):
+    if config.MODEL.ARCH == '28x28_CLSFER_baseline':
+        model = _get_28x28_CLSFER_baseline(config)
+    elif config.MODEL.ARCH == '28x28_CLSFER_catAfterMlp':
+        model = _get_28x28_CLSFER_catAfterMlp(config)
+    elif config.MODEL.ARCH == '28x28_CLSFER_addpatches':
+        model = _get_28x28_CLSFER_addpatches(config)
+    elif config.MODEL.ARCH == '28x28se_CLSFER_baseline':
+        model = _get_28x28se_CLSFER_baseline(config)
+    elif config.MODEL.ARCH == '28x28se_CLSFER_catAfterMlp':
+        model = _get_28x28se_CLSFER_catAfterMlp(config)
+    elif config.MODEL.ARCH == '28x28se_CLSFER_addpatches':
+        model = _get_28x28se_CLSFER_addpatches(config)
     return model
