@@ -65,6 +65,8 @@ _C.MODEL.DROP_PATH = 0.
 _C.MODEL.QK_NORM = True
 ## Layer Scale
 _C.MODEL.LAYER_SCALE = 1e-4
+# token SE
+_C.MODEL.TOKEN_SE = False
 
 
 ## ----------------------------------------------

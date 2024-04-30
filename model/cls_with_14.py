@@ -47,8 +47,10 @@ class CLSFER(nn.Module):
                  norm_layer: nn.Module = nn.LayerNorm,
                  block: nn.Module=NonMultiCLSBlock_catAfterMlp,
                 add_to_patch: bool = False,
-                encoder_se: bool = False):
+                encoder_se: bool = False,   
+                token_se: bool=False):
         super(CLSFER, self).__init__()
+        self.token_se = token_se
         self.irback = iresnet50(num_features=num_classes)
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
@@ -77,7 +79,8 @@ class CLSFER(nn.Module):
                  add_to_patch=add_to_patch)
                 for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.tokense = SE_block(channels=embed_len+1)
+        if token_se:
+            self.tokense = SE_block(channels=embed_len+1)
         self.headse = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
         
@@ -91,7 +94,8 @@ class CLSFER(nn.Module):
         x = torch.cat((x_cls, x_embed), dim=1)
         x = x + self.pos_embed
         # squeeze channel dimension and scale tokens
-        x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
+        if self.token_se:
+            x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
 
         # attention blocks
         x = self.blocks(x) 
@@ -119,8 +123,10 @@ class Baseline_14(nn.Module):
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
                  norm_layer: nn.Module = nn.LayerNorm,
-                encoder_se: bool=False):
+                encoder_se: bool=False,   
+                token_se: bool=False):
         super(Baseline_14, self).__init__()
+        self.token_se = token_se
         self.irback = iresnet50(num_features=num_classes)
         checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
         miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
@@ -146,7 +152,8 @@ class Baseline_14(nn.Module):
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
                 for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-        self.tokense = SE_block(channels=embed_len+1)
+        if token_se:
+            self.tokense = SE_block(channels=embed_len+1)
         self.headse = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
             
@@ -160,7 +167,8 @@ class Baseline_14(nn.Module):
         x = torch.cat((x_cls, x_embed), dim=1)
         x = x + self.pos_embed
         # squeeze channel dimension and scale tokens
-        x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
+        if self.token_se:
+            x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
 
         # attention blocks
         x = self.blocks(x) 
@@ -179,7 +187,8 @@ def _get_14x14_CLSFER_baseline(config):
                                 mlp_ratio=config.MODEL.MLP_RATIO,
                                 attn_drop=config.MODEL.ATTN_DROP,
                                 qk_norm=config.MODEL.QK_NORM,
-                                init_values=config.MODEL.LAYER_SCALE)
+                                init_values=config.MODEL.LAYER_SCALE,   
+                                token_se=config.MODEL.TOKEN_SE)
     return model
         
 def _get_14x14_CLSFER_catAfterMlp(config):
@@ -192,7 +201,8 @@ def _get_14x14_CLSFER_catAfterMlp(config):
                             drop_path=config.MODEL.DROP_PATH,
                             init_values=config.MODEL.LAYER_SCALE,
                             block=NonMultiCLSBlock_catAfterMlp,
-                            add_to_patch=False)
+                            add_to_patch=False,   
+                                token_se=config.MODEL.TOKEN_SE)
     return model
 
 def _get_14x14_CLSFER_addpatches(config):
@@ -205,7 +215,8 @@ def _get_14x14_CLSFER_addpatches(config):
                             drop_path=config.MODEL.DROP_PATH,
                             init_values=config.MODEL.LAYER_SCALE,
                             block=NonMultiCLSBlock_catAfterMlp,
-                            add_to_patch=True)
+                            add_to_patch=True,   
+                                token_se=config.MODEL.TOKEN_SE)
     return model
 
 def _get_14x14se_CLSFER_baseline(config):
@@ -215,7 +226,8 @@ def _get_14x14se_CLSFER_baseline(config):
                                 attn_drop=config.MODEL.ATTN_DROP,
                                 qk_norm=config.MODEL.QK_NORM,
                                 init_values=config.MODEL.LAYER_SCALE,   
-                       encoder_se=True)
+                       encoder_se=True,   
+                                token_se=config.MODEL.TOKEN_SE)
     return model
         
 def _get_14x14se_CLSFER_catAfterMlp(config):
@@ -229,7 +241,8 @@ def _get_14x14se_CLSFER_catAfterMlp(config):
                             init_values=config.MODEL.LAYER_SCALE,
                             block=NonMultiCLSBlock_catAfterMlp,
                             add_to_patch=False,   
-                            encoder_se=True)
+                            encoder_se=True,   
+                                token_se=config.MODEL.TOKEN_SE)
     return model
 
 def _get_14x14se_CLSFER_addpatches(config):
@@ -243,7 +256,8 @@ def _get_14x14se_CLSFER_addpatches(config):
                             init_values=config.MODEL.LAYER_SCALE,
                             block=NonMultiCLSBlock_catAfterMlp,
                             add_to_patch=True,
-                            encoder_se=True)
+                            encoder_se=True,   
+                                token_se=config.MODEL.TOKEN_SE)
     return model
 
 
