@@ -257,7 +257,6 @@ class CLSFER_28x28_Tests(unittest.TestCase):
             out = model(test_input)
             loss = self.criterion(out, test_target)
             logger.info(f'Arch: {arch}, out: {out.shape}, loss: {loss:.3f}')
-            
 
 if __name__ == '__main__':
     # make config

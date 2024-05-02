@@ -80,7 +80,7 @@ class CLSFER(nn.Module):
                 for i in range(depth)])
         self.norm = norm_layer(embed_dim)
         if token_se:
-            self.tokense = SE_block(channels=embed_len+1)
+            self.tokense = SE_block(channels=embed_len)
         self.headse = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
         
@@ -89,13 +89,14 @@ class CLSFER(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
-        # cat cls token, add pos embed
-        x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
-        x = torch.cat((x_cls, x_embed), dim=1)
-        x = x + self.pos_embed
         # squeeze channel dimension and scale tokens
         if self.token_se:
-            x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
+            x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
+        # cat cls token, add pos embed
+        x_cls = self.cls_token.expand(x_embed.shape[0], -1, -1)
+        x = torch.cat((x_cls, x_embed), dim=1)
+        x = x + self.pos_embed
+        
 
         # attention blocks
         x = self.blocks(x) 
@@ -153,7 +154,7 @@ class Baseline_14(nn.Module):
                 for i in range(depth)])
         self.norm = norm_layer(embed_dim)
         if token_se:
-            self.tokense = SE_block(channels=embed_len+1)
+            self.tokense = SE_block(channels=embed_len)
         self.headse = SE_block(channels=embed_dim)
         self.head = nn.Linear(embed_dim, num_classes) 
             
@@ -162,13 +163,14 @@ class Baseline_14(nn.Module):
         x_ir = self.irback(x)
         # patchify, BCHW -> BNC
         x_embed = x_ir.flatten(2).transpose(-2, -1)
-        # cat cls token, add pos embed
-        x_cls = self.cls_token.expand(x_ir.shape[0], -1, -1)
-        x = torch.cat((x_cls, x_embed), dim=1)
-        x = x + self.pos_embed
         # squeeze channel dimension and scale tokens
         if self.token_se:
-            x = self.tokense(x.permute(0, 2, 1)).permute(0, 2, 1)
+            x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
+        # cat cls token, add pos embed
+        x_cls = self.cls_token.expand(x_embed.shape[0], -1, -1)
+        x = torch.cat((x_cls, x_embed), dim=1)
+        x = x + self.pos_embed
+        
 
         # attention blocks
         x = self.blocks(x) 
