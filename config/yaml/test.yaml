@@ -8,15 +8,15 @@ SYSTEM:
 DATA:
     IMG_SIZE: 112
     BATCH_SIZE: 128
-    DATASET: 'CK+'
-    DATA_PATH: '../FERdatasets/CK+'
+    DATASET: 'JAFFE'
+    DATA_PATH: '../FERdatasets/JAFFE'
     
 MODEL:
     ARCH: '14x14_CLSFER_addpatches'
     DEPTH: 8
     
 TRAIN:
-    EPOCHS: 20
+    EPOCHS: 5
     BASE_LR: 1e-4
     
     OPTIMIZER:

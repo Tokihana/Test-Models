@@ -68,6 +68,11 @@ def build_dataset(config):
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
+    elif config.DATA.DATASET == 'JAFFE':
+        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
+        val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
+        nb_classes = 7
     else:
         raise NotImplementError("DATASET NOT SUPPORTED")
     return train_dataset, val_dataset, nb_classes
