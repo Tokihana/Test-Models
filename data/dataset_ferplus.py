@@ -24,7 +24,7 @@ class FERDataSet(data.Dataset):
         else:
             dataset = df[df[NAME_COLUMN].str.startswith('test')]
         file_names = dataset.iloc[:, NAME_COLUMN].values
-        self.target = dataset.iloc[:, LABEL_COLUMN].values - 1  # 0:Surprise, 1:Fear, 2:Disgust, 3:Happiness, 4:Sadness, 5:Anger, 6:Neutral
+        self.target = dataset.iloc[:, LABEL_COLUMN].values
         self.target = np.array(self.target)
 
         self.file_paths = []
