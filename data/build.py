@@ -3,7 +3,10 @@ import torch
 import torch.nn as nn
 from torchvision import datasets
 from torchvision.transforms import v2
+from torchvision import transforms
 from torchsampler import ImbalancedDatasetSampler
+from .dataset_raf import RafDataSet
+from .dataset_ferplus import FERDataSet
 
 def build_loader(config):
     config.defrost()
@@ -73,12 +76,23 @@ def build_dataset(config):
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
+    elif config.DATA.DATASET == 'dataseted-RAF-DB':
+        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_dataset = RafDataSet(config.DATA.DATA_PATH, train=True, transform=train_transform, basic_aug=True)
+        val_dataset = RafDataSet(config.DATA.DATA_PATH, train=False, transform=val_transform)
+        nb_classes = 7
+    elif config.DATA.DATASET == 'dataseted-FERPlus':
+        train_transform, val_transform = _get_ferplus_transform(img_size)
+        train_dataset = FERDataSet(config.DATA.DATA_PATH, train=True, transform=train_transform, basic_aug=True)
+        val_dataset = FERDataSet(config.DATA.DATA_PATH, train=False, transform=val_transform)
+        nb_classes = 8
     else:
         raise NotImplementError("DATASET NOT SUPPORTED")
     return train_dataset, val_dataset, nb_classes
 
 def _get_rafdb_transform(img_size=224):
     train_transform = v2.Compose([
+        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)), # Resize() only accept PIL or Tensor type images
         v2.RandomHorizontalFlip(),
         #v2.ToTensor(), # warned by Torch: ToTensor() will be removed in a future release, use [v2.ToImage(), v2.ToDtype(torch.float32, scale=True)] instead
@@ -90,6 +104,7 @@ def _get_rafdb_transform(img_size=224):
         v2.RandomErasing(scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
+        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
@@ -98,6 +113,7 @@ def _get_rafdb_transform(img_size=224):
 
 def _get_affectnet_transform(img_size=224):
     train_transform = v2.Compose([
+        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
@@ -105,6 +121,7 @@ def _get_affectnet_transform(img_size=224):
         v2.RandomErasing(p=1., scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
+        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
@@ -113,6 +130,7 @@ def _get_affectnet_transform(img_size=224):
 
 def _get_ferplus_transform(img_size=224):
     train_transform = v2.Compose([
+        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
@@ -120,6 +138,7 @@ def _get_ferplus_transform(img_size=224):
         v2.RandomErasing(p=1., scale=(0.02, 0.1)),
     ])
     val_transform = v2.Compose([
+        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),

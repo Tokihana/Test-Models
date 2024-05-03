@@ -38,6 +38,7 @@ class DataLoaderTests(unittest.TestCase):
         for images, targets in self.train_loader:
             break
         print(images, targets)
+        print(images.shape, targets.shape)
 
 class MixupTests(unittest.TestCase):
     @classmethod

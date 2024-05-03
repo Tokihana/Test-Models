@@ -7,9 +7,9 @@ SYSTEM:
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 128
-    DATASET: 'JAFFE'
-    DATA_PATH: '../FERdatasets/JAFFE'
+    BATCH_SIZE: 5
+    DATASET: 'dataseted-FERPlus'
+    DATA_PATH: '../FERdatasets/FERPlus-dataseted'
     
 MODEL:
     ARCH: '14x14_CLSFER_addpatches'
