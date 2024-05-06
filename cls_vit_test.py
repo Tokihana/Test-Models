@@ -258,6 +258,26 @@ class CLSFER_28x28_Tests(unittest.TestCase):
             out = model(test_input)
             loss = self.criterion(out, test_target)
             logger.info(f'Arch: {arch}, out: {out.shape}, loss: {loss:.3f}')
+            
+class TransFER_Tests(unittest.TestCase):
+    def test_TransFER_models(self):
+        criterion = nn.CrossEntropyLoss()
+        test_input = torch.rand((5, 3, 112, 112))
+        test_target = torch.rand((5, config.MODEL.NUM_CLASS))
+        for arch in ['TransFER', 'TransFER_catAfterMlp', 'TransFER_addpatches']:
+            config.defrost()
+            config.MODEL.ARCH = arch
+            config.freeze()
+            model = create_model(args, config)
+            out = model(test_input)
+            loss = criterion(out, test_target)
+            logger.info(f'Arch: {arch}, out: {out.shape}, loss: {loss:.3f}')
+            # throughput
+            train_loader, _, _ = build_loader(config)
+            through, step_time=throughput(model, train_loader, logger)
+            # FLOPS
+            params, flops = compute_flop_params(config, model, logger)
+        
 
 if __name__ == '__main__':
     # make config

@@ -12,6 +12,7 @@ from .conv_proj_attn import get_NonMutiCLSFER_conv_proj
 from .cross_cls_fusion import get_CrossCLSFER, get_CrossAddpatches
 from .cls_with_14 import get_14x14_model
 from .cls_with_28 import get_28x28_model
+from .TransFER import get_TransFER
 
 def create_model(args, config):
     model = None
@@ -65,6 +66,8 @@ def create_model(args, config):
         model = get_14x14_model(config)
     elif '28x28' in config.MODEL.ARCH:
         model = get_28x28_model(config)
+    elif 'TransFER' in config.MODEL.ARCH:
+        model = get_TransFER(config)
     else:
         raise Exception('Unknown model architecture')
         

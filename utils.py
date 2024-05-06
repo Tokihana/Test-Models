@@ -110,6 +110,7 @@ def _return_pop_keys(config, checkpoint):
                     
 @torch.no_grad()    
 def compute_flop_params(config, model, logger):
+    model = model.cuda()
     #img = torch.rand((1, 3, 224, 224))
     img = torch.rand((1, 3, 112, 112))
     if 'RepVGG' in config.MODEL.ARCH:
@@ -124,6 +125,7 @@ def compute_flop_params(config, model, logger):
 @torch.no_grad()
 def throughput(model, data_loader, logger):
     '''throughput can be used to ensure batch_size'''
+    model = model.cuda()
     model.eval()
     
     num_batchs = len(data_loader)
