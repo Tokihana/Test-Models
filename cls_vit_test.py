@@ -4,6 +4,7 @@ import unittest
 # third-party dependencies
 import torch
 import torch.nn as nn
+import wandb
 # local dependencies
 from model.cls_vit import CLSAttention, CLSBlock
 from model.ir50 import iresnet50
@@ -26,6 +27,15 @@ def parse_option():
     args, unparsed = parser.parse_known_args()
     config = get_config(args)
     return args, config
+
+class ConfigTests(unittest.TestCase):
+    '''
+    testing whether could print or send config object as a backup in running results
+    '''
+    def test_print(self):
+        runs = wandb.init(config=config)
+        print(config)
+        runs.log_model(path=args.config, name='configs')
 
 class DataLoaderTests(unittest.TestCase):
     @classmethod

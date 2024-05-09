@@ -28,49 +28,15 @@ def parse_option():
 
 def main():
     # init wandb
-    wandb.init(
+    run = wandb.init(
         # set the wandb project where this run will be logged
         project=config.SYSTEM.PROJECT_NAME,
     
         # track hyperparameters and run metadata
-        config={
-            # emperiment name
-            "experiment name": config.SYSTEM.EXPERIMENT_NAME,
-            # dataset
-            "dataset": config.DATA.DATASET,
-            "batch size": config.DATA.BATCH_SIZE,
-            "img size": config.DATA.IMG_SIZE,
-            "num workers": config.DATA.NUM_WORKERS,
-            "pin memory": config.DATA.PIN_MEMORY,
-            # model architecture
-            "architecture": config.MODEL.ARCH,
-            "encoder depth": config.MODEL.DEPTH,
-            "num classes": config.MODEL.NUM_CLASS,
-            "mlp ratio": config.MODEL.MLP_RATIO,
-            "attn drop": config.MODEL.ATTN_DROP,
-            "proj drop": config.MODEL.PROJ_DROP,
-            "drop path": config.MODEL.DROP_PATH,
-            # training settings
-            "learning_rate": config.TRAIN.BASE_LR,
-            "epochs": config.TRAIN.EPOCHS,
-            "resume": config.TRAIN.RESUME,
-            ## criterion
-            "criterion": config.TRAIN.CRITERION.NAME,
-            "LabelSmoothing": config.TRAIN.CRITERION.LABEL_SMOOTHING,
-            ## optimizer
-            "optimizer": config.TRAIN.OPTIMIZER.NAME,
-            "optimizer eps": config.TRAIN.OPTIMIZER.EPS,
-            "optimizer beta1": config.TRAIN.OPTIMIZER.BETAS[0],
-            "optimizer beta2": config.TRAIN.OPTIMIZER.BETAS[1],
-            "optimizer momentum": config.TRAIN.OPTIMIZER.MOMENTUM,
-            ## lr scheduler
-            "scheduler": config.TRAIN.LR_SCHEDULER.NAME,
-            "scheduler gamma": config.TRAIN.LR_SCHEDULER.GAMMA,
-            "reduce factor": config.TRAIN.LR_SCHEDULER.REDUCE_FACTOR,
-            # augment
-            "mixup alpha": config.AUG.MIXUP,
-        }
+        config=confg,
     )
+    # log yaml config
+    run.log_model(path=args.config, name='config')
     
     # load datasets
     train_loader, val_loader, mix_fn = build_loader(config)
