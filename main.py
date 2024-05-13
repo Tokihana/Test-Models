@@ -33,7 +33,7 @@ def main():
         project=config.SYSTEM.PROJECT_NAME,
     
         # track hyperparameters and run metadata
-        config=confg,
+        config=config,
     )
     # log yaml config
     run.log_model(path=args.config, name='config')

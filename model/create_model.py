@@ -13,6 +13,7 @@ from .cross_cls_fusion import get_CrossCLSFER, get_CrossAddpatches
 from .cls_with_14 import get_14x14_model
 from .cls_with_28 import get_28x28_model
 from .TransFER import get_TransFER
+from .poster_models.posterv2 import PosterV2
 
 def create_model(args, config):
     model = None
@@ -68,6 +69,8 @@ def create_model(args, config):
         model = get_28x28_model(config)
     elif 'TransFER' in config.MODEL.ARCH:
         model = get_TransFER(config)
+    elif config.MODEL.ARCH == 'POSTER2':
+        model = PosterV2()
     else:
         raise Exception('Unknown model architecture')
         

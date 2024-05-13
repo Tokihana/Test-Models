@@ -287,6 +287,24 @@ class TransFER_Tests(unittest.TestCase):
             through, step_time=throughput(model, train_loader, logger)
             # FLOPS
             params, flops = compute_flop_params(config, model, logger)
+            
+class POSTER2_Tests(unittest.TestCase):
+    def test_POSTER2(self):
+        criterion = nn.CrossEntropyLoss()
+        test_input = torch.rand((5, 3, 224, 224))
+        test_target = torch.rand((5, config.MODEL.NUM_CLASS))
+        config.defrost()
+        config.MODEL.ARCH = 'POSTER2'
+        config.freeze()
+        model = create_model(args, config)
+        out = model(test_input)
+        loss = criterion(out, test_target)
+        logger.info(f'Arch: {config.MODEL.ARCH}, out: {out.shape}, loss: {loss:.3f}')
+        # throughput
+        train_loader, _, _ = build_loader(config)
+        through, step_time=throughput(model, train_loader, logger)
+        # FLOPS
+        params, flops = compute_flop_params(config, model, logger)
         
 
 if __name__ == '__main__':
