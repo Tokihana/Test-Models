@@ -108,12 +108,13 @@ class PosterV2(nn.Module):
         o1, o2, o3 = self.embed_q(outs[0]).flatten(2).transpose(1, 2), self.embed_k(outs[1]).flatten(2).transpose(1, 2), self.embed_v(outs[2])
         o = torch.cat([o1, o2, o3], dim=1)
         out = self.VIT(o)
-        
+        '''
         print("landmark shapes: " + str([lm.shape for lm in lms]))
         print("image feature shapes: " + str([ir.shape for ir in irs]))
         
         print("q_global shapes: " + str([q.shape for q in qs]))
         print("window shapes" + str([window.shape for window in x_windows]))
+        '''
         
         return out
     

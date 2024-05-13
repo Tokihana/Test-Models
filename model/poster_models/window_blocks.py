@@ -106,7 +106,7 @@ class WindowAttentionGlobal(nn.Module):
         B = q_g.shape[0] # global landmark batch size
         head_dim = torch.div(C, self.num_heads, rounding_mode='floor')
         B_dim = torch.div(B_, B, rounding_mode='floor') # nums to repeat q_g
-        print(f"B_dim = {B_dim.cpu().numpy()}")
+        #print(f"B_dim = {B_dim.cpu().numpy()}")
         kv = self.qkv(x).reshape(B_, N, 2, self.num_heads, head_dim).permute(2, 0, 3, 1, 4) 
         # split channels to different head, then reshape to q_g shape
         k, v = kv[0], kv[1]

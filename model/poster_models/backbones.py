@@ -10,6 +10,7 @@ import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from .cnnnet import CnnNet
 import ast
+import os
 
 
 def _to_channel_last(x):
@@ -37,11 +38,11 @@ class Feature_Extractor(nn.Module):
             '''
 
         self.ir50 = Backbone(50, 0.0, 'ir') # 50 layers, drop = 0.0, mode = 'ir'
-        ir_checkpoints = torch.load(r'.\model\poster_models\pretrain\ir50.pth', map_location = lambda storage, loc:storage)
+        ir_checkpoints = torch.load(os.path.join(os.getcwd(), 'model/poster_models/pretrain/ir50.pth'), map_location = lambda storage, loc:storage)
         self.ir50.load_state_dict(ir_checkpoints)
 
         self.face_landback = MobileFaceNet([112, 112], 136) # inputsize = (112, 112), embeddingsize = 136
-        landback_checkpoints = torch.load(r'.\model\poster_models\pretrain\mobilefacenet_model_best.pth.tar',
+        landback_checkpoints = torch.load(os.path.join(os.getcwd(), 'model/poster_models/pretrain/mobilefacenet_model_best.pth.tar'),
                                           map_location = lambda storage, loc:storage)
         
         self.face_landback.load_state_dict(landback_checkpoints['state_dict'])
