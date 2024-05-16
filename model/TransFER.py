@@ -8,6 +8,7 @@ from timm.layers.helpers import make_divisible
 # local  
 from .ir50_14 import iresnet50
 from .cat_cls_vit import NonMultiCLSBlock_catAfterMlp
+from .star_attn import StarBlock
 
 class SE_block(nn.Module):
     def __init__(self, channels, rd_ratio=1./16, rd_divisor=8, bias=True):
@@ -137,6 +138,7 @@ class TransFER(nn.Module):
                  depth: int = 4, # follows poster settings, small=4, base=6, large=8
                  num_classes: int = 7,
                  norm_layer: nn.Module = nn.LayerNorm,
+                 block: nn.Module=Block,
                 encoder_se: bool=False, ):
         super(TransFER, self).__init__()
         self.irback = iresnet50(num_features=num_classes)
@@ -159,7 +161,7 @@ class TransFER(nn.Module):
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path))
         else:
             self.blocks = nn.Sequential(*[
-                Block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
+                block(dim=embed_dim, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias,
                   qk_norm=qk_norm, init_values=init_values, 
                   attn_drop=attn_drop, proj_drop=proj_drop, drop_path=drop_path)
                 for i in range(depth)])
@@ -226,6 +228,16 @@ def _get_TransFER_addpatches(config):
                             add_to_patch=True,)
     return model
 
+def _get_TransFER_Star(config):
+    model = model = TransFER(num_classes=config.MODEL.NUM_CLASS, 
+                                depth=config.MODEL.DEPTH, 
+                                mlp_ratio=config.MODEL.MLP_RATIO,
+                                attn_drop=config.MODEL.ATTN_DROP,
+                                qk_norm=config.MODEL.QK_NORM,
+                                init_values=config.MODEL.LAYER_SCALE,
+                            block=StarBlock)
+    return model
+
 
 def get_TransFER(config):
     if config.MODEL.ARCH == 'TransFER':
@@ -234,4 +246,6 @@ def get_TransFER(config):
         model = _get_TransFER_catAfterMlp(config)
     elif config.MODEL.ARCH == 'TransFER_addpatches':
         model = _get_TransFER_addpatches(config)
+    elif config.MODEL.ARCH == 'TransFER_Star':
+        model = _get_TransFER_Star(config)
     return model

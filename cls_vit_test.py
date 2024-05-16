@@ -306,6 +306,7 @@ class POSTER2_Tests(unittest.TestCase):
         # FLOPS
         params, flops = compute_flop_params(config, model, logger)
         
+        
 
 if __name__ == '__main__':
     # make config

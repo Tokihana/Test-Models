@@ -1,0 +1,53 @@
+{
+    "os": "Windows-10-10.0.22631-SP0",
+    "python": "3.9.13",
+    "heartbeatAt": "2024-05-14T03:10:45.688170",
+    "startedAt": "2024-05-14T03:10:42.883537",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "D:\\College\\projects\\Test Models\\main.py",
+    "codePathLocal": "main.py",
+    "codePath": "main.py",
+    "git": {
+        "remote": "https://github.com/Tokihana/Test-Models.git",
+        "commit": "e1c8ae2825b346a6293dc49cdf18188ca72ad60f"
+    },
+    "email": "sine.leika@gmail.com",
+    "root": "D:/College/projects/Test Models",
+    "host": "TOKIHANA",
+    "username": "wangj",
+    "executable": "D:\\College\\projects\\Test Models\\env\\Scripts\\python.exe",
+    "cpu_count": 24,
+    "cpu_count_logical": 32,
+    "cpu_freq": {
+        "current": 2200.0,
+        "min": 0.0,
+        "max": 2200.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2200.0,
+            "min": 0.0,
+            "max": 2200.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 1907.7119102478027,
+            "used": 1467.7167739868164
+        }
+    },
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "memory_total": 8585740288
+        }
+    ],
+    "memory": {
+        "total": 15.700675964355469
+    }
+}

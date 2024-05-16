@@ -92,7 +92,6 @@ def build_dataset(config):
 
 def _get_rafdb_transform(img_size=224):
     train_transform = v2.Compose([
-        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)), # Resize() only accept PIL or Tensor type images
         v2.RandomHorizontalFlip(),
         #v2.ToTensor(), # warned by Torch: ToTensor() will be removed in a future release, use [v2.ToImage(), v2.ToDtype(torch.float32, scale=True)] instead
@@ -101,10 +100,9 @@ def _get_rafdb_transform(img_size=224):
         #v2.Normalize(mean, std),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
-        v2.RandomErasing(scale=(0.02, 0.1)),
+        v2.RandomErasing(scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
-        transforms.ToPILImage(),
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale=True),
@@ -118,7 +116,7 @@ def _get_affectnet_transform(img_size=224):
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
-        v2.RandomErasing(p=1., scale=(0.02, 0.1)),
+        v2.RandomErasing(p=1., scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
         transforms.ToPILImage(),
@@ -135,7 +133,7 @@ def _get_ferplus_transform(img_size=224):
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32, scale = True),
-        v2.RandomErasing(p=1., scale=(0.02, 0.1)),
+        v2.RandomErasing(p=1., scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
         transforms.ToPILImage(),

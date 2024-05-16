@@ -20,9 +20,9 @@ _C.SYSTEM.LOG = 'log'
 # checkpoint path, joint with experiment path
 _C.SYSTEM.CHECKPOINT = 'checkpoint'
 # save frequency
-_C.SYSTEM.SAVE_FREQ = 20
+_C.SYSTEM.SAVE_FREQ = 50
 # print frequency
-_C.SYSTEM.PRINT_FREQ = 30
+_C.SYSTEM.PRINT_FREQ = 100
 
 ## ----------------------------------------------
 # DATA settings
@@ -33,6 +33,8 @@ _C.DATA = CN()
 _C.DATA.DATASET = 'RAF-DB'
 # path to dataset
 _C.DATA.DATA_PATH = '../datasets/RAF-DB'
+# erasing scale
+_C.DATA.ERASING_SCALE = (0.01, 0.25)
 # loader configs
 # image size
 _C.DATA.IMG_SIZE = 224
@@ -52,7 +54,7 @@ _C.MODEL.ARCH = 'IResNet50'
 # default nb_classes
 _C.MODEL.NUM_CLASS = 7
 # encoder depth
-_C.MODEL.DEPTH = 2
+_C.MODEL.DEPTH = 8
 # mlp ratio
 _C.MODEL.MLP_RATIO = 4.
 # attn drop
