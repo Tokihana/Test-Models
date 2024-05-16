@@ -34,7 +34,7 @@ _C.DATA.DATASET = 'RAF-DB'
 # path to dataset
 _C.DATA.DATA_PATH = '../datasets/RAF-DB'
 # erasing scale
-_C.DATA.ERASING_SCALE = (0.01, 0.25)
+_C.DATA.ERASING_SCALE = (0.02, 0.1)
 # loader configs
 # image size
 _C.DATA.IMG_SIZE = 224

@@ -5,12 +5,14 @@ def build_optimizer(config, model):
     '''
     build optimizer, set weight decay
     '''
+    '''
     skip = {}
     skip_keywords = {}
     if hasattr(model, 'no_weight_decay'):
         skip = model.no_weight_decay()
     if hasattr(model, 'no_weight_decay_keywords'):
         skip = model.no_weight_decay_keywords()
+        '''
         
     #parameters = set_weight_decay(model, skip, skip_keywords)
     parameters = model.parameters()
@@ -29,6 +31,8 @@ def build_optimizer(config, model):
     elif opt_lower == 'samsgd':
         optimizer = SAM(parameters, base_optimizer=optim.SGD, rho=config.TRAIN.OPTIMIZER.RHO, adaptive=False,
                         lr=config.TRAIN.BASE_LR, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True, weight_decay=config.TRAIN.WEIGHT_DECAY)
+    else:
+        raise f'not supported optim {opt_lower}'
     
     return optimizer
 

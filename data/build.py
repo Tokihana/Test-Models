@@ -42,53 +42,69 @@ def build_loader(config):
 def build_dataset(config):
     img_size = config.DATA.IMG_SIZE
     if config.DATA.DATASET == 'RAF-DB':
-        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'AffectNet_7':
-        train_transform, val_transform = _get_affectnet_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'AffectNet_8':
-        train_transform, val_transform = _get_affectnet_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'FERPlus':
-        train_transform, val_transform = _get_ferplus_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'Training'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'PublicTest'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'MiniTest': # minitest is a very, very small subset of RAF-DB
-        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'CK+':
-        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'JAFFE':
-        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'dataseted-RAF-DB':
-        train_transform, val_transform = _get_rafdb_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = RafDataSet(config.DATA.DATA_PATH, train=True, transform=train_transform, basic_aug=True)
         val_dataset = RafDataSet(config.DATA.DATA_PATH, train=False, transform=val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'dataseted-FERPlus':
-        train_transform, val_transform = _get_ferplus_transform(img_size)
+        train_transform, val_transform = _get_transform(img_size)
         train_dataset = FERDataSet(config.DATA.DATA_PATH, train=True, transform=train_transform, basic_aug=True)
         val_dataset = FERDataSet(config.DATA.DATA_PATH, train=False, transform=val_transform)
         nb_classes = 8
     else:
         raise NotImplementError("DATASET NOT SUPPORTED")
     return train_dataset, val_dataset, nb_classes
+
+def _get_transform(img_size=224):
+    train_transform = v2.Compose([
+        v2.Resize((img_size, img_size)),
+        v2.RandomHorizontalFlip(),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        v2.RandomErasing(scale=config.DATA.ERASING_SCALE),
+    ])
+    val_transform = v2.Compose([
+        v2.Resize((img_size, img_size)),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
 
 def _get_rafdb_transform(img_size=224):
     train_transform = v2.Compose([
@@ -99,13 +115,15 @@ def _get_rafdb_transform(img_size=224):
                         # note that ToImage() only accept the inputs with legth 3
         #v2.Normalize(mean, std),
         v2.ToImage(),
-        v2.ToDtype(torch.float32, scale=True),
+        v2.ToDtype(torch.float32),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         v2.RandomErasing(scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
-        v2.ToDtype(torch.float32, scale=True),
+        v2.ToDtype(torch.float32),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     return train_transform, val_transform
 

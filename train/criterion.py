@@ -11,7 +11,7 @@ def build_criterion(config):
     elif config.TRAIN.CRITERION.NAME == 'LabelSmoothing':
         criterion = LabelSmoothingCrossEntropy(smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
     elif config.TRAIN.CRITERION.NAME == 'CrossEntropy':
-        criterion = torch.nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss()
     elif config.TRAIN.CRITERION.NAME == 'POSTERCrossEntropy':
         criterion = POSTERCrossEntropy(smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
     return criterion
