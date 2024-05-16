@@ -136,18 +136,21 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         if mix_fn is not None:
             images, targets = mix_fn(images, targets)
             
-        optimizer.zero_grad()
-        if 'sam' in config.TRAIN.OPTIMIZER.NAME: # use SAM optimizer, with one step closure
+        if 'sam' in config.TRAIN.OPTIMIZER.NAME.lower(): # use SAM optimizer, with one step closure
             def closure():
                 #disable_running_stats(model) # for batch norm, suggested in sam README
+                optimizer.zero_grad()
                 loss = criterion(model(images), targets)
+                loss_avg.update(loss.item(), targets.size(0))
                 loss.backward()
                 return loss
             #enable_running_stats(model) # for batch norm
+            optimizer.zero_grad()
             loss = criterion(model(images), targets)
             loss.backward()
             optimizer.step(closure)
         else:
+            optimizer.zero_grad()
             outputs = model(images)
             if type(outputs) is dict: # for RepVGGplus-L2pse
                 loss = 0.0
