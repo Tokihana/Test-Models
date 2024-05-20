@@ -1,0 +1,109 @@
+wandb_version: 1
+
+SYSTEM:
+  desc: null
+  value:
+    PROJECT_NAME: CLSFERBaseline
+    EXPERIMENT_NAME: CLSFER_Cross
+    EXPERIMENT_PATH: ./results/RAF-DB_CLSFERCross
+    LOG: ./results/RAF-DB_CLSFERCross\log
+    CHECKPOINT: ./results/RAF-DB_CLSFERCross\checkpoint
+    SAVE_FREQ: 100
+    PRINT_FREQ: 100
+DATA:
+  desc: null
+  value:
+    DATASET: RAF-DB
+    DATA_PATH: ../FERdatasets/RAF-DB
+    ERASING_SCALE:
+    - 0.02
+    - 0.1
+    ERASING_P: 0.5
+    IMG_SIZE: 112
+    BATCH_SIZE: 64
+    NUM_WORKERS: 8
+    PIN_MEMORY: true
+MODEL:
+  desc: null
+  value:
+    ARCH: TransFER_Star
+    NUM_CLASS: 7
+    DEPTH: 8
+    MLP_RATIO: 4.0
+    ATTN_DROP: 0.0
+    PROJ_DROP: 0.0
+    DROP_PATH: 0.0
+    QK_NORM: true
+    LAYER_SCALE: 0.0001
+    TOKEN_SE: false
+MODE:
+  desc: null
+  value:
+    EVAL: false
+    FINETUNE: false
+    THROUGHPUT: false
+    FLOP: false
+TRAIN:
+  desc: null
+  value:
+    EPOCHS: 5
+    START_EPOCH: 0
+    WARMUP_EPOCHS: 20
+    WEIGHT_DECAY: 0.05
+    BASE_LR: 0.0001
+    WARMUP_LR: 0.0
+    MIN_LR: 0.0
+    RESUME: ''
+    CONFUSION_MATRIX: false
+    CRITERION:
+      NAME: FocalLoss
+      LABEL_SMOOTHING: 0.1
+    LR_SCHEDULER:
+      NAME: exponential
+      DECAY_EPOCHS: 30
+      DECAY_RATE: 0.1
+      GAMMA: 0.98
+      REDUCE_FACTOR: 0.5
+    OPTIMIZER:
+      NAME: samAdam
+      EPS: 1.0e-08
+      BETAS:
+      - 0.9
+      - 0.999
+      MOMENTUM: 0.9
+      RHO: 0.05
+AUG:
+  desc: null
+  value:
+    MIXUP: 0.0
+_wandb:
+  desc: null
+  value:
+    python_version: 3.9.13
+    cli_version: 0.16.6
+    framework: torch
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1716186089.0
+    t:
+      1:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 63
+      2:
+      - 1
+      - 41
+      - 49
+      - 55
+      - 63
+      3:
+      - 16
+      - 23
+      4: 3.9.13
+      5: 0.16.6
+      8:
+      - 3
+      - 5
+      13: windows-amd64

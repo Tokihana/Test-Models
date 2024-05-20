@@ -42,7 +42,7 @@ def build_loader(config):
 def build_dataset(config):
     img_size = config.DATA.IMG_SIZE
     if config.DATA.DATASET == 'RAF-DB':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
@@ -90,14 +90,14 @@ def build_dataset(config):
         raise NotImplementError("DATASET NOT SUPPORTED")
     return train_dataset, val_dataset, nb_classes
 
-def _get_transform(img_size=224):
+def _get_transform(config, img_size=224):
     train_transform = v2.Compose([
         v2.Resize((img_size, img_size)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
         v2.ToDtype(torch.float32),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        v2.RandomErasing(scale=config.DATA.ERASING_SCALE),
+        v2.RandomErasing(p=config.DATA.ERASING_P, scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
         v2.Resize((img_size, img_size)),
@@ -105,6 +105,7 @@ def _get_transform(img_size=224):
         v2.ToDtype(torch.float32),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
+    return train_transform, val_transform
 
 def _get_rafdb_transform(img_size=224):
     train_transform = v2.Compose([

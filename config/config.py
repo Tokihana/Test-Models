@@ -35,6 +35,8 @@ _C.DATA.DATASET = 'RAF-DB'
 _C.DATA.DATA_PATH = '../datasets/RAF-DB'
 # erasing scale
 _C.DATA.ERASING_SCALE = (0.02, 0.1)
+# erasing p
+_C.DATA.ERASING_P = 0.5
 # loader configs
 # image size
 _C.DATA.IMG_SIZE = 224
@@ -113,6 +115,8 @@ _C.TRAIN.CRITERION = CN()
 _C.TRAIN.CRITERION.NAME = 'CrossEntropy'
 # Label Smoothing
 _C.TRAIN.CRITERION.LABEL_SMOOTHING = 0.1
+# focal gamma
+_C.TRAIN.CRITERION.FOCAL_GAMMA = 2.
 
 # LR scheduler
 _C.TRAIN.LR_SCHEDULER = CN()

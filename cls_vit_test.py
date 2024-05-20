@@ -36,6 +36,40 @@ class ConfigTests(unittest.TestCase):
         runs = wandb.init(config=config)
         print(config)
         runs.log_model(path=args.config, name='configs')
+        
+class CriterionTests(unittest.TestCase):
+    '''
+    test loss functions
+    '''
+    def test_CE(self):
+        out = torch.rand((5,7))
+        targets = torch.rand((5,7))
+        config.defrost()
+        config.TRAIN.CRITERION.NAME = 'CrossEntropy'
+        config.freeze()
+        criterion = build_criterion(config)
+        loss = criterion(out, targets)
+        self.assertEqual(loss.shape, torch.Size([]))
+        logger.info(f'CE loss: {loss:.3f}')
+    def test_label_smoothing(self):
+        out = torch.rand((5,7))
+        targets = torch.rand((5,7))
+        config.defrost()
+        config.TRAIN.CRITERION.NAME = 'LabelSmoothing'
+        config.freeze()
+        criterion = build_criterion(config)
+        loss = criterion(out, targets)
+        logger.info(f'LabelSmoothing loss: {loss:.3f}')
+    def test_Focal(self):
+        out = torch.randn((5, 7))
+        targets = torch.randint(high=7, size=(5,))
+        config.defrost()
+        config.TRAIN.CRITERION.NAME = 'FocalLoss'
+        config.freeze()
+        criterion = build_criterion(config)
+        loss = criterion(out, targets)
+        logger.info(f'Focal loss: {loss:.3f}')
+        
 
 class DataLoaderTests(unittest.TestCase):
     @classmethod
@@ -49,6 +83,8 @@ class DataLoaderTests(unittest.TestCase):
             break
         print(images, targets)
         print(images.shape, targets.shape)
+        self.assertEqual(images.shape, torch.Size([config.DATA.BATCH_SIZE, 3, config.DATA.IMG_SIZE, config.DATA.IMG_SIZE]))
+        self.assertEqual(targets.shape, torch.Size([config.DATA.BATCH_SIZE]))
 
 class MixupTests(unittest.TestCase):
     @classmethod

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+#from .focal_loss import FocalLoss
 
 def build_criterion(config):
     criterion = None
@@ -9,11 +10,14 @@ def build_criterion(config):
         # smoothing is handled with mixup label transform
         criterion = SoftTargetCrossEntropy()
     elif config.TRAIN.CRITERION.NAME == 'LabelSmoothing':
-        criterion = LabelSmoothingCrossEntropy(smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
+        criterion = nn.CrossEntropyLoss(label_smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
     elif config.TRAIN.CRITERION.NAME == 'CrossEntropy':
         criterion = nn.CrossEntropyLoss()
     elif config.TRAIN.CRITERION.NAME == 'POSTERCrossEntropy':
         criterion = POSTERCrossEntropy(smoothing=config.TRAIN.CRITERION.LABEL_SMOOTHING)
+    elif config.TRAIN.CRITERION.NAME == 'FocalLoss':
+        criterion = FocalLoss(gamma=config.TRAIN.CRITERION.FOCAL_GAMMA)
+        
     return criterion
 
 class LabelSmoothingCrossEntropy(nn.Module):
@@ -43,3 +47,24 @@ class POSTERCrossEntropy(nn.Module):
         
     def forward(self, x: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         return 2 * self.LSCE(x, target) + self.CE(x, target)
+    
+class FocalLoss(nn.Module):
+    def __init__(self, gamma=0, **kwargs):
+        super(FocalLoss, self).__init__()
+
+        self.gamma = gamma
+        logging.info("using gamma={}".format(gamma))
+
+    def forward(self, input, target):
+
+        target = target.view(-1,1)
+
+        logpt = torch.nn.functional.log_softmax(input, dim=1)
+        logpt = logpt.gather(1,target)
+        logpt = logpt.view(-1)
+        pt = logpt.exp()
+
+        loss = -1 * (1-pt)**self.gamma * logpt
+        
+        return loss.mean()
+    
