@@ -53,7 +53,6 @@ class FocalLoss(nn.Module):
         super(FocalLoss, self).__init__()
 
         self.gamma = gamma
-        logging.info("using gamma={}".format(gamma))
 
     def forward(self, input, target):
 

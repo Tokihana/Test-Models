@@ -1,5 +1,6 @@
 from torch import optim as optim
 from .sam import SAM
+from .Esam import ESAM
 
 def build_optimizer(config, model):
     '''
@@ -31,10 +32,17 @@ def build_optimizer(config, model):
     elif opt_lower == 'samsgd':
         optimizer = SAM(parameters, base_optimizer=optim.SGD, rho=config.TRAIN.OPTIMIZER.RHO, adaptive=False,
                         lr=config.TRAIN.BASE_LR, momentum=config.TRAIN.OPTIMIZER.MOMENTUM, nesterov=True, weight_decay=config.TRAIN.WEIGHT_DECAY)
+    elif opt_lower == 'esamadam':
+        base_opt = optim.Adam(model.parameters(), lr=config.TRAIN.BASE_LR, eps=config.TRAIN.OPTIMIZER.EPS, betas=config.TRAIN.OPTIMIZER.BETAS,
+                             weight_decay=config.TRAIN.WEIGHT_DECAY)
+        optimizer = ESAM(parameters, base_opt, rho=config.TRAIN.OPTIMIZER.RHO, adaptive=False)
+        
     else:
         raise f'not supported optim {opt_lower}'
-    
-    return optimizer
+    if 'esam' in opt_lower:
+        return optimizer, base_opt
+    else:
+        return optimizer
 
 def set_weight_decay(model, skip_list, skip_keywords):
     '''

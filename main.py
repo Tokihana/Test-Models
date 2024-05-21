@@ -60,7 +60,10 @@ def main():
         return
     
     # build optimier
-    optimizer = build_optimizer(config, model)
+    if 'esam' in config.TRAIN.OPTIMIZER.NAME.lower():
+        optimizer, base_optimizer = build_optimizer(config, model)
+    else:
+        optimizer = build_optimizer(config, model)
     logger.info(f"LR: {optimizer.param_groups[0]['lr']}")
     
     # check if EVAL MODE or some other running MODE you need, such as THROUGHPUT_MODE
@@ -74,7 +77,10 @@ def main():
         model = load_finetune_weights(config, model, logger)
     
     # build scheduler
-    lr_scheduler = build_scheduler(config, optimizer, len(train_loader))
+    if 'esam' in config.TRAIN.OPTIMIZER.NAME.lower():
+        lr_scheduler = build_scheduler(config, base_optimizer, len(train_loader))
+    else:
+        lr_scheduler = build_scheduler(config, optimizer, len(train_loader))
     
     # init criterion
     criterion = build_criterion(config)
@@ -90,7 +96,7 @@ def main():
 
     for epoch in range(config.TRAIN.START_EPOCH, config.TRAIN.EPOCHS):
         # training
-        train_loss = train_one_epoch(config=config, model=model, data_loader=train_loader, epoch=epoch, mix_fn = mix_fn, criterion=criterion, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
+        train_acc, train_loss = train_one_epoch(config=config, model=model, data_loader=train_loader, epoch=epoch, mix_fn = mix_fn, criterion=criterion, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         if epoch % config.SYSTEM.SAVE_FREQ == 0 or epoch >= (config.TRAIN.EPOCHS-1):
             save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
         # validate
@@ -100,6 +106,7 @@ def main():
                 save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
             max_acc = max(max_acc, acc)
             wandb.log({'acc':acc, 
+                       'train acc': train_acc,
                        'train loss': train_loss, 
                        'loss':loss, 
                        'running max acc':max_acc, 
@@ -125,6 +132,7 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
     num_steps = len(data_loader)
     batch_time = AverageMeter()
     loss_avg = AverageMeter()
+    acc_avg = AverageMeter()
     
     start = time.time()
     end = time.time()
@@ -136,7 +144,14 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
         if mix_fn is not None:
             images, targets = mix_fn(images, targets)
             
-        if 'sam' in config.TRAIN.OPTIMIZER.NAME.lower(): # use SAM optimizer, with one step closure
+        if 'esam' in config.TRAIN.OPTIMIZER.NAME.lower():
+            def defined_backward(loss):
+                loss.backward()
+            paras = [images, targets, criterion, model, defined_backward]
+            optimizer.paras = paras
+            optimizer.step()
+            output, loss = optimizer.returnthings
+        elif 'sam' in config.TRAIN.OPTIMIZER.NAME.lower(): # use SAM optimizer, with one step closure
             def closure():
                 #disable_running_stats(model) # for batch norm, suggested in sam README
                 optimizer.zero_grad()
@@ -146,21 +161,22 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
                 return loss
             #enable_running_stats(model) # for batch norm
             optimizer.zero_grad()
-            loss = criterion(model(images), targets)
+            output = model(images)
+            loss = criterion(output, targets)
             loss.backward()
             optimizer.step(closure)
         else:
             optimizer.zero_grad()
-            outputs = model(images)
-            if type(outputs) is dict: # for RepVGGplus-L2pse
+            output = model(images)
+            if type(output) is dict: # for RepVGGplus-L2pse
                 loss = 0.0
-                for name, pred in outputs.items():
+                for name, pred in output.items():
                     if 'aux' in name:
                         loss += 0.1*criterion(pred, targets)
                     else:
                         loss += criterion(pred, targets)
             else:
-                loss = criterion(outputs, targets) 
+                loss = criterion(output, targets) 
             loss.backward() # compute gradient
             optimizer.step() # updata params
             
@@ -168,6 +184,8 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
             lr_scheduler.step_update(epoch*num_steps*idx)
         
         loss_avg.update(loss.item(), targets.size(0))
+        acc = accuracy(output, targets, topk=(1, ))[0]
+        acc_avg.update(acc.item(), targets.size(0))
         batch_time.update(time.time() - end)
         end = time.time()
         
@@ -179,13 +197,14 @@ def train_one_epoch(config, model, data_loader, criterion, optimizer, lr_schedul
                 f'Train: [{epoch}/{config.TRAIN.EPOCHS}][{idx}/{len(data_loader)}]\t'
                 f'eta {datetime.timedelta(seconds=int(etas))} lr {lr:.8f}\t'
                 f'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                f'Acc {acc_avg.val:.3f} ({acc_avg.avg:.3f})\t'
                 f'Loss {loss_avg.val:.4f} ({loss_avg.avg:.4f})\t'
                 f'Mem {memory_used:.0f}MB')
     if config.TRAIN.LR_SCHEDULER.NAME == 'exponential':
         lr_scheduler.step()
     epoch_time = time.time() - start
     logger.info(f'EPOCH {epoch} training takes {datetime.timedelta(seconds=int(epoch_time))}')
-    return loss_avg.avg
+    return acc_avg.avg, loss_avg.avg
         
     
 @torch.no_grad()
