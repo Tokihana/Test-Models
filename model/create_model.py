@@ -14,6 +14,7 @@ from .cls_with_14 import get_14x14_model
 from .cls_with_28 import get_28x28_model
 from .TransFER import get_TransFER
 from .poster_models.posterv2 import PosterV2
+from .star_CAE import get_stars
 
 def create_model(args, config):
     model = None
@@ -71,6 +72,8 @@ def create_model(args, config):
         model = get_TransFER(config)
     elif config.MODEL.ARCH == 'POSTER2':
         model = PosterV2()
+    elif 'star' in config.MODEL.ARCH: # 'starCAE-single'
+        model = get_stars(config)
     else:
         raise Exception('Unknown model architecture')
         

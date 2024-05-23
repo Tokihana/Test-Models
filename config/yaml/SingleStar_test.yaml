@@ -1,8 +1,8 @@
-# SingleStar_test.yaml
+# test.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'single_star_tests'
-    EXPERIMENT_PATH: './results/RAF-DB_single_star'
+    EXPERIMENT_NAME: 'running_tests'
+    EXPERIMENT_PATH: './results/RAF-DB_CLSFERCross'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     

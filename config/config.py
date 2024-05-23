@@ -1,5 +1,6 @@
 # config.py
 import os
+import datetime
 from yacs.config import CfgNode as CN
 
 # root node
@@ -65,12 +66,26 @@ _C.MODEL.ATTN_DROP = 0.
 _C.MODEL.PROJ_DROP = 0.
 # drop path
 _C.MODEL.DROP_PATH = 0.
+# head drop
+_C.MODEL.HEAD_DROP = 0.
 # qk norm
 _C.MODEL.QK_NORM = True
 ## Layer Scale
-_C.MODEL.LAYER_SCALE = 1e-4
+_C.MODEL.LAYER_SCALE = 1e-5
 # token SE
 _C.MODEL.TOKEN_SE = False
+# qkv bias
+_C.MODEL.QKV_BIAS = False
+
+# StarBlock ablations
+_C.MODEL.STARBLOCK = CN()
+## gate, can be 'CAE' or 'FC'
+_C.MODEL.STARBLOCK.GATE = 'CAE'
+## use 'star' or 'sum'
+_C.MODEL.STARBLOCK.USE_STAR = True
+## skip or dense short cut connection  
+_C.MODEL.STARBLOCK.SHORTCUT = 'dense'
+
 
 
 ## ----------------------------------------------
@@ -111,35 +126,35 @@ _C.TRAIN.CONFUSION_MATRIX = False
 
 # criterion
 _C.TRAIN.CRITERION = CN()
-# type of criterion, support CrossEntropy, LabelSmoothing, SoftTargetCE
+## type of criterion, support CrossEntropy, LabelSmoothing, SoftTargetCE
 _C.TRAIN.CRITERION.NAME = 'CrossEntropy'
-# Label Smoothing
+## Label Smoothing
 _C.TRAIN.CRITERION.LABEL_SMOOTHING = 0.1
-# focal gamma
+## focal gamma
 _C.TRAIN.CRITERION.FOCAL_GAMMA = 2.
 
 # LR scheduler
 _C.TRAIN.LR_SCHEDULER = CN()
 _C.TRAIN.LR_SCHEDULER.NAME = 'exponential'
-# Epoch interval to decay LR, used in StepLRScheduler
+## Epoch interval to decay LR, used in StepLRScheduler
 _C.TRAIN.LR_SCHEDULER.DECAY_EPOCHS = 30
-# LR decay rate, used in StepLRScheduler
+## LR decay rate, used in StepLRScheduler
 _C.TRAIN.LR_SCHEDULER.DECAY_RATE = 0.1
-# Gamma for Expoential Scheduler
+## Gamma for Expoential Scheduler
 _C.TRAIN.LR_SCHEDULER.GAMMA = 0.98
-# factor for Reduce On Plateau
+## factor for Reduce On Plateau
 _C.TRAIN.LR_SCHEDULER.REDUCE_FACTOR = 0.5
 
 # Optimizer
 _C.TRAIN.OPTIMIZER = CN()
 _C.TRAIN.OPTIMIZER.NAME = 'Adam'
-# epsilon
+## epsilon
 _C.TRAIN.OPTIMIZER.EPS = 1e-8
-# betas
+## betas
 _C.TRAIN.OPTIMIZER.BETAS = (0.9, 0.999)
-# SGD momentum
+## SGD momentum
 _C.TRAIN.OPTIMIZER.MOMENTUM = 0.9
-# SAM rho
+## SAM rho
 _C.TRAIN.OPTIMIZER.RHO = 0.05
 
 ## ----------------------------------------------
@@ -164,7 +179,9 @@ def get_config(args):
 
     # build experiment folder
     if not config.SYSTEM.EXPERIMENT_PATH == '':
-        if not os.path.exists(config.SYSTEM.EXPERIMENT_PATH):
+        now = datetime.datetime.now()
+        time_str = now.strftime("[%m-%d]-[%H-%M]-")
+        if not os.path.exists(f'{config.SYSTEM.EXPERIMENT_PATH}_{time_str}'):
             os.makedirs(config.SYSTEM.EXPERIMENT_PATH)
         config.SYSTEM.LOG = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.LOG)
         config.SYSTEM.CHECKPOINT = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.CHECKPOINT)

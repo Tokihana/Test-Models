@@ -5,7 +5,10 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from timm.models.vision_transformer import LayerScale
+# local
+from .ir50 import iresnet50
 
+__all__ = ['StarBlock', 'SingleModel', 'get_stars']
 
 ### ------------------------
 # utils
@@ -15,7 +18,7 @@ class FC(nn.Module):
     input: 
         x (B, N, C)
     '''
-    def __init__(self, in_chans, out_chans, kernel_size, stride=1, padding=0, dilation=1, groups=1, with_bn=True):
+    def __init__(self, in_chans: int, out_chans: int, kernel_size: int, stride: int=1, padding: int=0, dilation: int=1, groups: int=1, with_bn: bool=True):
         super().__init__()
         self.conv = nn.Conv1d(in_chans, out_chans, kernel_size=kernel_size, stride=stride, padding=padding, dilation=dilation, groups=groups)
         if with_bn:
@@ -27,22 +30,61 @@ class FC(nn.Module):
     def forward(self, x):
         x = self.bn(self.conv(x.permute(0, 2, 1))).permute(0, 2, 1)
         return x
+    
+class SE_block(nn.Module):
+    def __init__(self, channels, rd_ratio=1./16, rd_divisor=8, bias=True):
+        super().__init__()
+        from timm.layers.helpers import make_divisible
+        rd_chans = make_divisible(channels * rd_ratio, rd_divisor, round_limit=0.)
+        self.fc1 = nn.Conv1d(channels, rd_chans, kernel_size=1, bias=bias)
+        self.bn = nn.BatchNorm1d(rd_chans)
+        self.act_layer = nn.ReLU()
+        self.fc2 = nn.Conv1d(rd_chans, channels, kernel_size=1, bias=bias)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        '''
+        x (B, N, C)
+        '''
+        # squeeze, BNC -> B1C -> BC1
+        x_se = x.mean(dim=1, keepdim=True).permute(0, 2, 1)
+        x_se = self.sigmoid(self.fc2(self.act_layer(self.bn(self.fc1(x_se)))))
+        x = x * x_se.permute(0, 2, 1)
+        return x
             
 class Mlp(nn.Module):
     '''
     1d convlution mlp, input x (B, N, C)
     '''
-    def __init__(self, dim, mlp_ratio=4.):
+    def __init__(self, dim: int, 
+                 mlp_ratio: float=4.,
+                 drop: float=0.,
+                 act_layer: nn.Module=nn.GELU,):
         super().__init__()
         self.norm = nn.LayerNorm(dim)
         self.fc1 = nn.Conv1d(dim, int(dim*mlp_ratio), kernel_size=1)
-        self.act = nn.GELU()
+        self.act = act_layer()
+        self.drop1 = nn.Dropout(drop)
+
         self.fc2 = nn.Conv1d(int(dim*mlp_ratio), dim, kernel_size=1)
         self.bn = nn.BatchNorm1d(dim)
+        self.drop2 = nn.Dropout(drop)
     def forward(self, x):
         x = self.norm(x)
-        x = self.bn(self.fc2(self.act(self.fc1(x.permute(0, 2, 1))))).permute(0, 2, 1)
+        x = self.drop1(self.act(self.fc1(x.permute(0, 2, 1))))
+        x = self.drop2(self.bn(self.fc2(x))).permute(0, 2, 1)
         return x
+    
+class SEhead(nn.Sequential):
+    def __init__(self, dim: int, num_classes: int, head_norm: bool=True, head_se: bool=True, head_drop: float=0.):
+        super().__init__()
+        if head_norm:
+            self.add_module('head_norm', nn.LayerNorm(dim))
+        if head_se:
+            self.add_module('se_block', SE_block(channels=dim))
+        if head_drop > 0.:
+            self.add_module('head_drop', nn.Dropout(head_drop))
+        self.add_module('linear', nn.Linear(dim, num_classes))
 
 
 ### ------------------------
@@ -144,7 +186,7 @@ class StarBlock(nn.Module):
         
         # mlp after gate
         self.norm2 = norm_layer(dim)
-        self.mlp = mlp_layer(dim=dim, mlp_ratio=mlp_ratio)
+        self.mlp = mlp_layer(dim=dim, mlp_ratio=mlp_ratio, drop=proj_drop, act_layer=act_layer)
         self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         
@@ -160,9 +202,12 @@ class StarBlock(nn.Module):
         if self.use_star:
             # B1C/BNC * BNC
             x_gate = x_c * self.fc_encoder(x)
-        else:
+        else: # applied sum to update the patch tokens 
             # B1C/BNC + BNC
             x_gate = x_c + self.fc_encoder(x)
+        
+        if self.shortcut == 'dense':
+            x_gate = x_gate + inputs
             
         # mlp
         x_mlp = self.drop_path2(self.ls2(self.mlp(self.norm2(x_gate))))
@@ -179,17 +224,127 @@ class StarBlock(nn.Module):
 ### ------------------------
 # models
 ### ------------------------
-    
+class SingleModel(nn.Module):
+    '''
+    use 14x14 feature maps from IR50, fed to {depth} layer blocks
+    '''
+    def __init__(self, 
+                img_size: int=112,
+                embed_len: int=196,
+                embed_dim: int=256,
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias=False,
+                qk_norm=True,
+                init_values: Optional[float]=None,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                head_drop: float=0.,
+                depth: int=8,
+                num_classes: int=7,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                block: nn.Module=StarBlock,
+                **kwargs):
+        super().__init__()
+        # ir50 backbone
+        self.irback = iresnet50(num_features=num_classes)
+        checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
+        miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
+        print(f'Miss: {miss},\t Unexcept: {unexcepted}')
+        del checkpoint, miss, unexcepted
+        
+        # running blocks
+        ## cls token and positional embedding
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
+        ## stochastic depth drop path
+        dpr = [x.item() for x in torch.linspace(0, drop_path, depth)]
+        
+        ## blocks 
+        if block == StarBlock: # using star block
+            self.blocks = nn.Sequential(*[
+                block(dim=embed_dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=dpr[i],
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,
+                      gate=kwargs['gate'],
+                      use_star=kwargs['use_star'],
+                      shortcut=kwargs['shortcut'])
+            for i in range(depth)])
+        else:
+            raise ModuleNotFoundError(f'unsupported block type {block}')
+        
+        self.norm = norm_layer(embed_dim)
+        self.head = SEhead(dim=embed_dim, num_classes=num_classes, head_drop=head_drop)
+        
+    def forward(self, x):
+        # get stem output
+        _, x_ir, _ = self.irback(x)
+        x_embed = x_ir.flatten(2).transpose(-2, -1)
+        x_cls = self.cls_token.expand(x_embed.shape[0], -1, -1)
+        x = torch.cat((x_cls, x_embed), dim=1)
+        x = x + self.pos_embed
+        
+        # process blocks
+        x = self.blocks(x)
+        x = self.norm(x)
+        
+        # output
+        x_cls = x[:, 0:1, ...]
+        ## classification head
+        out = self.head(x_cls)
+        return out.squeeze()
 
+
+
+        
+### ------------------------
+# model create  
+### ------------------------
+def get_stars(config):
+    if config.MODEL.ARCH == 'starCAE-single':
+        return _get_single_model(config)
+
+def _get_single_model(config):
+    model = SingleModel(img_size=config.DATA.IMG_SIZE,
+                        mlp_ratio=config.MODEL.MLP_RATIO, 
+                        num_classes=config.MODEL.NUM_CLASS,
+                        qkv_bias=config.MODEL.QKV_BIAS,
+                        qk_norm=config.MODEL.QK_NORM,
+                        init_values=config.MODEL.LAYER_SCALE,
+                        attn_drop=config.MODEL.ATTN_DROP,
+                        proj_drop=config.MODEL.PROJ_DROP,
+                        drop_path=config.MODEL.DROP_PATH,
+                        head_drop=config.MODEL.HEAD_DROP,
+                        depth=config.MODEL.DEPTH,
+                        block=StarBlock,
+                        gate=config.MODEL.STARBLOCK.GATE,
+                        use_star=config.MODEL.STARBLOCK.USE_STAR,
+                        shortcut=config.MODEL.STARBLOCK.SHORTCUT)
+    return model
+   
+                        
 ### ------------------------
 # unittests
 ### ------------------------
-class FCTests(unittest.TestCase):
+class UtilsTests(unittest.TestCase):
     '''
-    for a given FC layer with inputs shaped (B, N, C),
-    suppose outputs shaped (B, N, C)
+    Tests for util classes.
     '''
     def test_fc_layer(self):
+        '''
+        for a given FC layer with inputs shaped (B, N, C),
+        suppose outputs shaped (B, N, C)
+        '''
         B, N, C = 5, 49, 512
         x = torch.rand((B, N, C))
         fc_layer = FC(in_chans=512, out_chans=512, kernel_size=1, stride=1)
@@ -197,14 +352,29 @@ class FCTests(unittest.TestCase):
         self.assertEqual(out.shape, torch.Size([B, N, C]))
         
     def test_mlp_layer(self):
+        '''
+        given inputs shaped (B, N, C),
+        suppose outputs shaped (B, N, C)
+        '''
         B, N, C = 5, 49, 512
         x = torch.rand((B, N, C))
-        fc_layer = Mlp(dim=512, mlp_ratio=4.)
-        out = fc_layer(x)
+        mlp_layer = Mlp(dim=512, mlp_ratio=4.)
+        out = mlp_layer(x)
         self.assertEqual(out.shape, torch.Size([B, N, C]))
+    
+    def test_head(self):
+        '''
+        given features shaped (B, 1, C),
+        suppose outputs shaped (B, num_class)
+        '''
+        B, C, num_class = 5, 512, 7 
+        x = torch.rand((B, 1, C)) # class token
+        head = SEhead(C, num_class)
+        self.assertEqual(head(x).squeeze().shape, torch.Size([B, num_class]))
 
 class ClassAttentionTests(unittest.TestCase):
     '''
+    test class attention computation.
     given inputs shaped (B, N, C),
     suppose outputs shaped (B, 1, C)
     '''
@@ -217,6 +387,7 @@ class ClassAttentionTests(unittest.TestCase):
         
 class StarBlockTests(unittest.TestCase):
     '''
+    test Star Block ablations.
     given inputs shaped (B, N, C),
     suppose outputs shaped (B, N, C)
     '''
@@ -264,7 +435,26 @@ class StarBlockTests(unittest.TestCase):
         # fc gate, sum, skip shortcut
         block = StarBlock(dim=self.C, gate='CAE', use_star=True, shortcut='dense')
         self.assertEqual(block(self.x).shape, torch.Size([self.B, self.N, self.C]))
-
+        
+class ModelTests(unittest.TestCase):
+    '''
+    test models, given inputs shaped (B, C, H, W), 
+    suppose outputs shaped (B, num_class
+    '''
+    def test_single_model(self):
+        B, C, H, W = 5, 3, 112, 112
+        num_class = 7
+        images = torch.rand((B, C, H, W))
+        model = SingleModel(num_classes=num_class, gate='CAE', use_star=True, shortcut='dense')
+        out = model(images)
+        self.assertEqual(out.shape, torch.Size([B, num_class]))
     
 if __name__ == '__main__':
+    '''
+    unittest may raise error at:
+    1. [line 9]: from .ir50 import iresnet50
+       just replace '.ir50' as 'ir50'
+    2. [line 250]: checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
+       relative path, delete '/model'
+    '''
     unittest.main()
