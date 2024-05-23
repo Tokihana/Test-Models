@@ -1,26 +1,30 @@
-# test.yaml
+# SingleStar_test.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'running_tests'
-    EXPERIMENT_PATH: './results/RAF-DB_CLSFERCross'
+    EXPERIMENT_NAME: 'single_star_tests'
+    EXPERIMENT_PATH: './results/RAF-DB_single_star'
     SAVE_FREQ: 100
-    PRINT_FREQ: 30
+    PRINT_FREQ: 50
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 64
+    BATCH_SIZE: 200
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
-    
-MODE:
-    THROUGHPUT: True
+    ERASING_SCALE: (0.05, 0.05)
+    ERASING_P: 0.5
     
 MODEL:
     ARCH: 'starCAE-single'
     DEPTH: 8
     
+    STARBLOCK:
+        GATE: 'CAE'
+        USE_STAR: True
+        SHORTCUT: 'dense'
+    
 TRAIN:
-    EPOCHS: 5
+    EPOCHS: 50
     BASE_LR: 3.5e-5
     
     OPTIMIZER:
