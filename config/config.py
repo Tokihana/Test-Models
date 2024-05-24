@@ -77,6 +77,11 @@ _C.MODEL.TOKEN_SE = False
 # qkv bias
 _C.MODEL.QKV_BIAS = False
 
+# mlp layer, 'linear' or 'conv1d'
+_C.MODEL.MLP_LAYER = 'linear'
+# fc layer, 'linear' or 'conv1d'
+_C.MODEL.FC_LAYER = 'linear'
+
 # StarBlock ablations
 _C.MODEL.STARBLOCK = CN()
 ## gate, can be 'CAE' or 'FC'
@@ -180,9 +185,9 @@ def get_config(args):
     # build experiment folder
     if not config.SYSTEM.EXPERIMENT_PATH == '':
         now = datetime.datetime.now()
-        time_str = now.strftime("[%m-%d]-[%H-%M]-")
+        time_str = now.strftime("[%m-%d]-[%H-%M]")
         if not os.path.exists(f'{config.SYSTEM.EXPERIMENT_PATH}_{time_str}'):
-            os.makedirs(config.SYSTEM.EXPERIMENT_PATH)
+            os.makedirs(f'{config.SYSTEM.EXPERIMENT_PATH}_{time_str}')
         config.SYSTEM.LOG = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.LOG)
         config.SYSTEM.CHECKPOINT = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.CHECKPOINT)
         if not os.path.exists(config.SYSTEM.CHECKPOINT):

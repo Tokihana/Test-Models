@@ -5,31 +5,47 @@ from typing import Optional
 import torch
 import torch.nn as nn
 from timm.models.vision_transformer import LayerScale
+from timm.layers import DropPath
 # local
-from .ir50 import iresnet50
+from ir50 import iresnet50
 
 __all__ = ['StarBlock', 'SingleModel', 'get_stars']
 
 ### ------------------------
 # utils
 ### ------------------------
-class FC(nn.Module):
+class Conv1d_FC(nn.Module):
     '''
     input: 
         x (B, N, C)
     '''
-    def __init__(self, in_chans: int, out_chans: int, kernel_size: int, stride: int=1, padding: int=0, dilation: int=1, groups: int=1, with_bn: bool=True):
+    def __init__(self, in_chans: int, out_chans: int, kernel_size: int=1, stride: int=1, padding: int=0, dilation: int=1, groups: int=1, with_norm: bool=True):
         super().__init__()
         self.conv = nn.Conv1d(in_chans, out_chans, kernel_size=kernel_size, stride=stride, padding=padding, dilation=dilation, groups=groups)
-        if with_bn:
+        if with_norm:
             self.bn = nn.BatchNorm1d(out_chans)
             torch.nn.init.constant_(self.bn.weight, 1)
             torch.nn.init.constant_(self.bn.bias, 0) 
         else:
             self.bn = nn.Identity()
+            
     def forward(self, x):
         x = self.bn(self.conv(x.permute(0, 2, 1))).permute(0, 2, 1)
         return x
+    
+class Linear_FC(nn.Module):
+    '''
+    linear full connection layer with LayerNorm
+    '''
+    def __init__(self, in_chans: int, out_chans: int, with_norm: bool=True):
+        super().__init__()
+        self.fc = nn.Linear(in_chans, out_chans,)
+        self.norm = nn.LayerNorm(out_chans) if with_norm else nn.Identity()
+        
+    def forward(self, x):
+        x = self.norm(self.fc(x))
+        return x
+        
     
 class SE_block(nn.Module):
     def __init__(self, channels, rd_ratio=1./16, rd_divisor=8, bias=True):
@@ -52,7 +68,7 @@ class SE_block(nn.Module):
         x = x * x_se.permute(0, 2, 1)
         return x
             
-class Mlp(nn.Module):
+class Conv1d_Mlp(nn.Module):
     '''
     1d convlution mlp, input x (B, N, C)
     '''
@@ -61,18 +77,45 @@ class Mlp(nn.Module):
                  drop: float=0.,
                  act_layer: nn.Module=nn.GELU,):
         super().__init__()
-        self.norm = nn.LayerNorm(dim)
         self.fc1 = nn.Conv1d(dim, int(dim*mlp_ratio), kernel_size=1)
         self.act = act_layer()
         self.drop1 = nn.Dropout(drop)
-
+        self.bn = nn.BatchNorm1d(int(dim*mlp_ratio))
         self.fc2 = nn.Conv1d(int(dim*mlp_ratio), dim, kernel_size=1)
-        self.bn = nn.BatchNorm1d(dim)
         self.drop2 = nn.Dropout(drop)
+        
     def forward(self, x):
+        x = self.fc1(x.permute(0, 2, 1))
+        x = self.act(x)
+        x = self.drop1(x)
+        x = self.bn(x)
+        x = self.fc2(x)
+        x = self.drop2(x).permute(0, 2, 1)
+        return x
+    
+class Linear_Mlp(nn.Module):
+    '''
+    linear mlp, input x (B, N, C)
+    '''
+    def __init__(self, dim: int,
+                 mlp_ratio: float=4.,
+                 drop: float=0.,
+                 act_layer: nn.Module=nn.GELU,):
+        super().__init__()
+        self.fc1 = nn.Linear(dim, int(dim*mlp_ratio))
+        self.act = act_layer()
+        self.drop1 = nn.Dropout(drop)
+        self.norm = nn.LayerNorm(int(dim*mlp_ratio))
+        self.fc2 = nn.Linear(int(dim*mlp_ratio), dim)
+        self.drop2 = nn.Dropout(drop)
+        
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.drop1(x)
         x = self.norm(x)
-        x = self.drop1(self.act(self.fc1(x.permute(0, 2, 1))))
-        x = self.drop2(self.bn(self.fc2(x))).permute(0, 2, 1)
+        x = self.fc2(x)
+        x = self.drop2(x)
         return x
     
 class SEhead(nn.Sequential):
@@ -156,7 +199,8 @@ class StarBlock(nn.Module):
                 drop_path: float=0.,
                 act_layer: nn.Module=nn.GELU,
                 norm_layer: nn.Module=nn.LayerNorm,
-                mlp_layer: nn.Module = Mlp,
+                mlp_layer: nn.Module=Conv1d_Mlp,
+                fc_layer: nn.Module=Linear_FC,
                 gate: str='CAE', # 'CAE' or FC
                 use_star: bool=True, 
                 shortcut: str='skip', # 'skip' or 'dense'
@@ -176,10 +220,9 @@ class StarBlock(nn.Module):
                                 proj_drop=proj_drop,
                                 norm_layer=norm_layer,)
         else: # self.gate == 'FC'
-            self.gate_layer = nn.Sequential(FC(in_chans=dim, out_chans=dim, kernel_size=1, stride=1),
-                                            act_layer())
+            self.gate_layer = nn.Sequential(fc_layer(in_chans=dim, out_chans=dim, with_norm=True), act_layer())
         # fc branch
-        self.fc_encoder = FC(in_chans=dim, out_chans=dim, kernel_size=1, stride=1)
+        self.fc_encoder = fc_layer(in_chans=dim, out_chans=dim, with_norm=True)
         
         self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
@@ -206,8 +249,6 @@ class StarBlock(nn.Module):
             # B1C/BNC + BNC
             x_gate = x_c + self.fc_encoder(x)
         
-        if self.shortcut == 'dense':
-            x_gate = x_gate + inputs
             
         # mlp
         x_mlp = self.drop_path2(self.ls2(self.mlp(self.norm2(x_gate))))
@@ -215,8 +256,12 @@ class StarBlock(nn.Module):
         # shortcut
         if self.shortcut == 'skip':
             x = inputs + x_mlp
-        else: # self.shortcut == 'dense'
+        elif self.shortcut == 'dense':
             x = inputs + x_gate + x_mlp
+        elif self.shortcut == 'none':
+            x = x_mlp
+        else:
+            raise ValueError(f'unsupported shortcut type "{self.shortcut}"')
             
         return x
     
@@ -246,6 +291,8 @@ class SingleModel(nn.Module):
                 act_layer: nn.Module=nn.GELU,
                 norm_layer: nn.Module=nn.LayerNorm,
                 block: nn.Module=StarBlock,
+                mlp_layer: nn.Module=Linear_Mlp,
+                fc_layer: nn.Module=Linear_FC,
                 **kwargs):
         super().__init__()
         # ir50 backbone
@@ -276,6 +323,8 @@ class SingleModel(nn.Module):
                       drop_path=dpr[i],
                       act_layer=act_layer,
                       norm_layer=norm_layer,
+                      mlp_layer=mlp_layer,
+                      fc_layer=fc_layer,
                       gate=kwargs['gate'],
                       use_star=kwargs['use_star'],
                       shortcut=kwargs['shortcut'])
@@ -315,6 +364,14 @@ def get_stars(config):
         return _get_single_model(config)
 
 def _get_single_model(config):
+    if config.MODEL.MLP_LAYER == 'linear':
+        mlp_layer = Linear_Mlp
+    elif config.MODEL.MLP_LAYER == 'conv1d':
+        mlp_layer = Conv1d_Mlp
+    if config.MODEL.FC_LAYER == 'linear':
+        fc_layer = Linear_FC
+    elif config.MODEL.FC_LAYER == 'conv1s':
+        fc_layer = Conv1d_FC
     model = SingleModel(img_size=config.DATA.IMG_SIZE,
                         mlp_ratio=config.MODEL.MLP_RATIO, 
                         num_classes=config.MODEL.NUM_CLASS,
@@ -327,6 +384,8 @@ def _get_single_model(config):
                         head_drop=config.MODEL.HEAD_DROP,
                         depth=config.MODEL.DEPTH,
                         block=StarBlock,
+                        mlp_layer=mlp_layer,
+                        fc_layer=fc_layer,
                         gate=config.MODEL.STARBLOCK.GATE,
                         use_star=config.MODEL.STARBLOCK.USE_STAR,
                         shortcut=config.MODEL.STARBLOCK.SHORTCUT)
@@ -340,25 +399,42 @@ class UtilsTests(unittest.TestCase):
     '''
     Tests for util classes.
     '''
-    def test_fc_layer(self):
+    def test_conv1d_fc(self):
         '''
         for a given FC layer with inputs shaped (B, N, C),
         suppose outputs shaped (B, N, C)
         '''
         B, N, C = 5, 49, 512
         x = torch.rand((B, N, C))
-        fc_layer = FC(in_chans=512, out_chans=512, kernel_size=1, stride=1)
+        fc_layer = Conv1d_FC(in_chans=C, out_chans=C, kernel_size=1, stride=1)
         out = fc_layer(x)
         self.assertEqual(out.shape, torch.Size([B, N, C]))
         
-    def test_mlp_layer(self):
+    def test_linear_fc(self):
+        '''
+        given inputs shaped (B, N, C), 
+        suppose outputs shaped (B, N, C)
+        '''
+        B, N, C = 5, 196, 256
+        x = torch.rand((B, N, C))
+        fc_layer = Linear_FC(in_chans=C, out_chans=C)
+        self.assertEqual(fc_layer(x).shape, torch.Size([B, N, C]))
+        
+    def test_conv1d_mlp(self):
         '''
         given inputs shaped (B, N, C),
         suppose outputs shaped (B, N, C)
         '''
         B, N, C = 5, 49, 512
         x = torch.rand((B, N, C))
-        mlp_layer = Mlp(dim=512, mlp_ratio=4.)
+        mlp_layer = Conv1d_Mlp(dim=C, mlp_ratio=4.)
+        out = mlp_layer(x)
+        self.assertEqual(out.shape, torch.Size([B, N, C]))
+        
+    def test_linear_mlp(self):
+        B, N, C = 5, 196, 256
+        x = torch.rand((B, N, C))
+        mlp_layer = Linear_Mlp(dim=C, mlp_ratio=4.)
         out = mlp_layer(x)
         self.assertEqual(out.shape, torch.Size([B, N, C]))
     
@@ -395,6 +471,10 @@ class StarBlockTests(unittest.TestCase):
     def setUpClass(self):
         self.B, self.N, self.C = 5, 49, 512
         self.x = torch.rand((self.B, self.N, self.C))
+        
+    def test_conv_fc_mlp(self):
+        block = StarBlock(dim=self.C, mlp_layer=Conv1d_Mlp, fc_layer=Conv1d_FC)
+        self.assertEqual(block(self.x).shape, torch.Size([self.B, self.N, self.C]))
     
     def test_fc_sum_skip(self):
         # fc gate, sum, skip shortcut

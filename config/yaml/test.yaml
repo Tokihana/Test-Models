@@ -12,12 +12,16 @@ DATA:
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
     
-MODE:
-    THROUGHPUT: True
     
 MODEL:
     ARCH: 'starCAE-single'
     DEPTH: 8
+    DROP_PATH: 0.5
+    
+    STARBLOCK:
+        GATE: 'CAE'
+        USE_STAR: True
+        SHORTCUT: 'skip'
     
 TRAIN:
     EPOCHS: 5

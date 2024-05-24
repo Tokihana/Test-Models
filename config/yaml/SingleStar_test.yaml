@@ -21,7 +21,7 @@ MODEL:
     STARBLOCK:
         GATE: 'CAE'
         USE_STAR: True
-        SHORTCUT: 'dense'
+        SHORTCUT: 'ljdfaoj'
     
 TRAIN:
     EPOCHS: 50
