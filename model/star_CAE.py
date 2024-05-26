@@ -171,7 +171,7 @@ class CLSAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
         
         # attn: BH1(C/H) @ BH(C/H)N -> BH1N
-        attn = q @ k.transpose(-2, -1) / self.scale
+        attn = q @ k.transpose(-2, -1) * self.scale
         attn = attn.softmax(dim=-1) # dim that will compute softmax, every slice along this dim will sum to 1, for attn case, is N
         attn = self.attn_drop(attn)
         

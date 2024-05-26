@@ -232,6 +232,7 @@ class CAEBlock(nn.Module):
         self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         
         # mlp 
+        self.fc = Linear_FC(in_chans=dim, out_chans=dim)
         self.norm2 = norm_layer(dim)
         self.mlp = mlp_layer(dim=dim, mlp_ratio=mlp_ratio, drop=proj_drop, act_layer=act_layer)
         self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
@@ -247,7 +248,8 @@ class CAEBlock(nn.Module):
         x_cls = x[:, 0:1, ...].clone() + self.drop_path1(self.ls1(self.attn(self.norm1(x))))    
             
         # mlp
-        x = self.drop_path2(self.ls2(self.mlp(self.norm2(x)))) + x_cls.expand(-1, N, -1)
+        x = torch.cat((x_cls, x[:, 1:, ...].clone()), dim=1)
+        x = self.fc(x) + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls)))).expand(-1, N, -1)
             
         return x
 
@@ -415,6 +417,26 @@ def _get_single_CAE(config):
 ### ---------------------------------------------
 # unittest
 ### ---------------------------------------------
+class ClassAttentionTests(unittest.TestCase):
+    '''
+    test class attention computation.
+    given inputs shaped (B, N, C),
+    suppose outputs shaped (B, 1, C)
+    '''
+    def test_class_attn(self):
+        B, N, C = 5, 49, 512
+        x = torch.rand((B, N, C))
+        attn_layer = CLSAttention(dim=C, num_heads=8, qkv_bias=False, qk_norm=True,)
+        out = attn_layer(x)
+        self.assertEqual(out.shape, torch.Size([B, 1, C]))
+        
+class BlockTests(unittest.TestCase):
+    def test_CAEBlock(self):
+        B, N, C = 5, 49, 512
+        x = torch.rand((B, N, C))
+        block = CAEBlock(dim=C)
+        self.assertEqual(block(x).shape, torch.Size([B, N, C]))
+
 class ModelTests(unittest.TestCase):
     def test_baseline(self):
         B, C, H, W = 5, 3, 112, 112

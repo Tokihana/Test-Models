@@ -1,18 +1,18 @@
-# test.yaml
+# CK+_AC_CAE_test.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'running_tests'
+    EXPERIMENT_NAME: 'CK+_AC_CAE_test'
     EXPERIMENT_PATH: '../autodl-tmp/results/CK+_AC-CAE'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 64
+    BATCH_SIZE: 32
     DATASET: 'CK+'
     DATA_PATH: '../FERdatasets/CK+'
     
-    
+
 MODEL:
     ARCH: 'AC-CAE_single'
     DEPTH: 8
@@ -24,7 +24,7 @@ MODEL:
     
 TRAIN:
     EPOCHS: 200
-    BASE_LR: 3.5e-5
+    BASE_LR: 1e-4
     
     OPTIMIZER:
         NAME: 'esamAdam'

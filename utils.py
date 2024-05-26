@@ -113,6 +113,8 @@ def _return_pop_keys(config, checkpoint):
         pop_keys = ['head.weight', 'head.bias']
     elif config.MODEL.ARCH == 'TransFER':
         pop_keys = ['head.weight', 'head.bias']
+    elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single']:
+        pop_keys = ['head.linear.weight', 'head.linear.bias']
     else:
         pop_keys = None
     return pop_keys
@@ -153,3 +155,76 @@ def throughput(model, data_loader, logger):
         logger.info(f"batch_size {batch_size} throughput {int(throughput)} time per step {batch_size/throughput:.2f}")
         logger.info(f"will spend {batch_size/throughput*num_batchs:.2f}s for processing {num_batchs} batch")
         return int(throughput), batch_size/throughput
+    
+    
+
+@torch.no_grad()
+def tSNE(config, model, data_loader):
+    from simple_tsne import tsne, momentum_func
+    import matplotlib.pyplot as plt
+    import numpy as np
+    if '14x14' in config.MODEL.ARCH:
+        # only contains a linear head
+        B, C = len(data_loader.dataset), model.head.in_features
+        model.head = torch.nn.Identity()
+    elif 'AC-CAE' in config.MODEL.ARCH:
+        # contains a SEhead model with a linear head
+        B, C = len(data_loader.dataset), model.head.linear.in_features
+        model.head.linear = torch.nn.Identity()
+    print(f'Examples: {B},\t out channels: {C}')
+    
+    
+    model = model.cuda()
+    model.eval()
+    
+    features = np.zeros((B, C))
+    classes = np.zeros((B,))
+    loc = 0
+    for idx, (images, targets) in enumerate(data_loader):
+        batch_size = images.shape[0]
+        images = images.cuda()
+        out = model(images)
+        #print(out.shape)
+        
+        features[loc: loc+batch_size] = out.cpu().detach().numpy()
+        classes[loc: loc+batch_size] = targets.detach().numpy()
+        loc = loc + batch_size
+    print(features.shape)
+    
+    low_dim = tsne(
+        data=features, # Data is mxn numpy array, each row a point
+        n_components=2, # Number of dim to embed to
+        perp=30, # Perplexity (higher for more spread out data)
+        n_iter=1000, # Iterations to run t-SNE for
+        lr=100, # Learning rate
+        momentum_fn=momentum_func, # Function returning momentum coefficient, this one is the default update schedule
+        pbar=True, # Show progress bar
+        random_state=42 # Seed for random initialization
+    )
+    
+    plt.figure()
+    plt.scatter(low_dim[:,0], low_dim[:,1], c=classes)
+    plt.savefig(os.path.join(config.SYSTEM.EXPERIMENT_PATH, f'{config.DATA.DATASET}_{config.MODEL.ARCH}_t-SNE.png'))
+    plt.show()
+    
+
+    
+
+@torch.no_grad()
+def GradCAM(config, model, img_path):
+    from pytorch_grad_cam import GradCAM, HiResCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
+    from PIL import Image
+    from torchvision import transforms
+    
+    if '14x14' in config.MODEL.ARCH:
+        target_layers = [model.head]
+    elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single']:
+        target_layers = [model.head.linear]
+    
+    img = Image.open(img_path)
+    img = transforms.Resize(config.DATA.IMG_SIZE)(img)
+    img = transforms.ToTensor()(img)
+    input_img = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    input_img = input_img.unsqueeze(0)

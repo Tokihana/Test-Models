@@ -105,6 +105,8 @@ _C.MODE.FINETUNE = False
 _C.MODE.THROUGHPUT = False
 # FLOP flags
 _C.MODE.FLOP = False
+# tSNE 
+_C.MODE.T_SNE = False
 
 ## ----------------------------------------------
 # TRAINING settings

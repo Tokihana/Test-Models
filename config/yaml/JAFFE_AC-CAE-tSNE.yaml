@@ -1,20 +1,22 @@
-# test.yaml
+# JAFFE_AC-CAE-tSNE.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 'running_tests'
-    EXPERIMENT_PATH: '../autodl-tmp/results/CK+_AC-CAE'
+    EXPERIMENT_NAME: 't-SNE'
+    EXPERIMENT_PATH: '../autodl-tmp/results/JAFFE_AC-CAE_tSNE'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     
 DATA:
     IMG_SIZE: 112
     BATCH_SIZE: 64
-    DATASET: 'CK+'
-    DATA_PATH: '../FERdatasets/CK+'
+    DATASET: 'JAFFE'
+    DATA_PATH: '../FERdatasets/JAFFE'
     
+MODE:
+    T_SNE: True
     
 MODEL:
-    ARCH: 'AC-CAE_single'
+    ARCH: '14x14_CLSFER_addpatches'
     DEPTH: 8
     DROP_PATH: 0.5
     
@@ -25,6 +27,7 @@ MODEL:
 TRAIN:
     EPOCHS: 200
     BASE_LR: 3.5e-5
+    RESUME: 'D:\College\projects\autodl-tmp\results\JAFFE_AC-CAE_[05-26]-[01-27]_95.35\checkpoint\best.pth'
     
     OPTIMIZER:
         NAME: 'esamAdam'
