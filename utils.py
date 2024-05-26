@@ -167,7 +167,7 @@ def tSNE(config, model, data_loader):
         # only contains a linear head
         B, C = len(data_loader.dataset), model.head.in_features
         model.head = torch.nn.Identity()
-    elif 'AC-CAE' in config.MODEL.ARCH:
+    elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single']:
         # contains a SEhead model with a linear head
         B, C = len(data_loader.dataset), model.head.linear.in_features
         model.head.linear = torch.nn.Identity()

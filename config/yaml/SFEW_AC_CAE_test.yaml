@@ -1,22 +1,20 @@
-# RAF-DB_AC-CAE-tSNE.yaml
+# SFEW_AC_CAE_test.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
-    EXPERIMENT_NAME: 't-SNE'
-    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_AC-CAE_tSNE'
+    EXPERIMENT_NAME: 'SFEW_AC_CAE_test'
+    EXPERIMENT_PATH: '../autodl-tmp/results/SFEW_AC-CAE'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 64
-    DATASET: 'RAF-DB'
-    DATA_PATH: '../FERdatasets/RAF-DB'
+    BATCH_SIZE: 32
+    DATASET: 'SFEW'
+    DATA_PATH: '../FERdatasets/SFEW'
     
-MODE:
-    T_SNE: True
-    
+
 MODEL:
-    ARCH: 'baseline_single'
+    ARCH: '14x14_CLSFER_baseline'
     DEPTH: 8
     DROP_PATH: 0.5
     
@@ -25,9 +23,8 @@ MODEL:
     
     
 TRAIN:
-    EPOCHS: 200
+    EPOCHS: 5
     BASE_LR: 3.5e-5
-    RESUME: 'D:\College\projects\autodl-tmp\AC-CAE_best\RAF-DB\RAF-DB_AC-CAE_baseline_[05-26]-[22-19]_89.15\checkpoint\best.pth'
     
     OPTIMIZER:
         NAME: 'esamAdam'

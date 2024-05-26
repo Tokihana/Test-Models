@@ -311,9 +311,11 @@ class SingleModel(nn.Module):
         del checkpoint, miss, unexcepted
         
         if token_se == 'linear':
-            self.token_se = SE_block(dim=embed_len)
+            self.token_se_block = SE_block(dim=embed_len)
         elif token_se == 'conv2d':
-            self.token_se = Conv_SE(dim=embed_dim)
+            self.token_se_block = Conv_SE(dim=embed_dim)
+        elif token_se == 'conv1d':
+            self.token_se_block = Conv1d_SE(dim=embed_len)
         
         # running blocks
         ## cls token and positional embedding
@@ -362,10 +364,10 @@ class SingleModel(nn.Module):
         # get stem output
         _, x_ir, _ = self.irback(x)
         if self.token_se == 'conv2d':
-            x_ir = self.token_se(x_ir)
+            x_ir = self.token_se_block(x_ir)
         x_embed = x_ir.flatten(2).transpose(-2, -1)
-        if self.token_se == 'linear':
-            x_embed = self.tokense(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
+        if self.token_se in ['linear', 'conv1d']:
+            x_embed = self.token_se_block(x_embed.permute(0, 2, 1)).permute(0, 2, 1)
         x_cls = self.cls_token.expand(x_embed.shape[0], -1, -1)
         x = torch.cat((x_cls, x_embed), dim=1)
         x = x + self.pos_embed
