@@ -57,12 +57,30 @@ class SE_block(nn.Module):
         self.sigmod = nn.Sigmoid()
 
     def forward(self, x):
+        x1 = x.mean(dim=1, keepdim=True)
         x1 = self.linear1(x)
         x1 = self.relu(x1)
         x1 = self.linear2(x1)
         x1 = self.sigmod(x1)
         x = x * x1
         return x
+    
+class Conv1d_SE(nn.Module):
+    def __init__(self, dim: int, rd_ratio=1./16):
+        super().__init__()
+        rd_chans = int(rd_ratio * dim)
+        self.fc1 = nn.Conv1d(dim, rd_chans, kernel_size=1, bias=True)
+        self.bn = nn.BatchNorm1d(rd_chans)
+        self.act = nn.ReLU()
+        self.fc2 = nn.Conv1d(rd_chans, dim, kernel_size=1, bias=True)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x1 = x.mean(dim=1, keepdim=True).permute(0, 2, 1)
+        x1 = self.sigmoid(self.fc2(self.act_layer(self.bn(self.fc1(x1)))))
+        x = x * x1.permute(0, 2, 1)
+        return x
+    
     
 class Conv_SE(nn.Module):
     def __init__(self, dim: int, rd_ratio: float=1./16):
@@ -75,6 +93,7 @@ class Conv_SE(nn.Module):
         
     def forward(self, x):
         inputs = x
+        x = x.mean(dim = 1, keepdim=True)
         x = self.fc1(x)
         x = self.act(x)
         x = self.norm(x)
