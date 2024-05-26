@@ -47,42 +47,47 @@ def build_dataset(config):
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'AffectNet_7':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'AffectNet_8':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'FERPlus':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'Training'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'PublicTest'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'MiniTest': # minitest is a very, very small subset of RAF-DB
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'CK+':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 8
     elif config.DATA.DATASET == 'JAFFE':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
+        train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
+        val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
+        nb_classes = 7
+    elif config.DATA.DATASET == 'SFEW':
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'train'), train_transform)
         val_dataset = datasets.ImageFolder(os.path.join(config.DATA.DATA_PATH, 'test'), val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'dataseted-RAF-DB':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = RafDataSet(config.DATA.DATA_PATH, train=True, transform=train_transform, basic_aug=True)
         val_dataset = RafDataSet(config.DATA.DATA_PATH, train=False, transform=val_transform)
         nb_classes = 7
     elif config.DATA.DATASET == 'dataseted-FERPlus':
-        train_transform, val_transform = _get_transform(img_size)
+        train_transform, val_transform = _get_transform(config, img_size)
         train_dataset = FERDataSet(config.DATA.DATA_PATH, train=True, transform=train_transform, basic_aug=True)
         val_dataset = FERDataSet(config.DATA.DATA_PATH, train=False, transform=val_transform)
         nb_classes = 8

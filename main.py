@@ -1,5 +1,6 @@
 # main.py
 # inline dependencies
+import os
 import time
 import datetime
 import argparse
@@ -13,7 +14,7 @@ from timm.utils import accuracy, AverageMeter
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
-from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput, disable_running_stats, enable_running_stats
+from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput, disable_running_stats, enable_running_stats, load_weights
 from model import create_model
 
 def parse_option():
@@ -67,13 +68,15 @@ def main():
     
     # check if EVAL MODE or some other running MODE you need, such as THROUGHPUT_MODE
     if config.MODE.EVAL:
-        load_weights(config, model, loggr)
-        acc, loss = validate(config, model, val_loader, logger)
-        logger.info(f'Epoch: [{epoch}/{config.TRAIN.EPOCHS}], Acc: {acc:.3f}%, Max: {max_acc:.3f}%')
+        model = load_weights(config, model, logger)
+        acc, loss = validate(config=config, model=model, data_loader=val_loader, criterion=nn.CrossEntropyLoss(), logger=logger)
+        logger.info(f'Acc: {acc:.3f}%, Loss: {loss:.3f}%')
         return
     
     if config.MODE.FINETUNE:
-        model = load_finetune_weights(config, model, logger)
+        #model = load_finetune_weights(config, model, logger)
+        #max_acc = load_checkpoint(config=config, model=model, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger)
+        model = load_weights(config, model, logger, finetune=True)
     
     # build scheduler
     if 'esam' in config.TRAIN.OPTIMIZER.NAME.lower():
@@ -102,7 +105,7 @@ def main():
         if val_loader is not None:
             acc, loss = validate(config=config, model=model, data_loader=val_loader, criterion=criterion, logger=logger)
             if max_acc <= acc: # max_acc updated
-                save_checkpoint(config=config, model=model, epoch=epoch, max_acc=max_acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
+                save_checkpoint(config=config, model=model, epoch=epoch, max_acc=acc, optimizer=optimizer, lr_scheduler=lr_scheduler, logger=logger, is_best=True)
             max_acc = max(max_acc, acc)
             wandb.log({'acc':acc, 
                        'train acc': train_acc,
@@ -116,6 +119,7 @@ def main():
                 lr_scheduler.step(acc) # step metric
                   
     wandb.log({'max acc':max_acc})
+    #run.log_model(path=os.path.join(config.SYSTEM.CHECKPOINT, 'best.pth'), name='best.pth')
     total_time = time.time() - start_time
     logger.info(f'Total training time: {str(datetime.timedelta(seconds=int(total_time)))}')
     

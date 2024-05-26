@@ -15,6 +15,7 @@ from .cls_with_28 import get_28x28_model
 from .TransFER import get_TransFER
 from .poster_models.posterv2 import PosterV2
 from .star_CAE import get_stars
+from .CAE import get_AC_CAE
 
 def create_model(args, config):
     model = None
@@ -68,12 +69,16 @@ def create_model(args, config):
         model = get_14x14_model(config)
     elif '28x28' in config.MODEL.ARCH:
         model = get_28x28_model(config)
+    elif config.MODEL.ARCH == 'MViT':
+        model = timm.create_model('mvitv2_base.fb_in1k')
     elif 'TransFER' in config.MODEL.ARCH:
         model = get_TransFER(config)
     elif config.MODEL.ARCH == 'POSTER2':
         model = PosterV2()
     elif 'star' in config.MODEL.ARCH: # 'starCAE-single'
         model = get_stars(config)
+    elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single']:
+        model = get_AC_CAE(config)
     else:
         raise Exception('Unknown model architecture')
         

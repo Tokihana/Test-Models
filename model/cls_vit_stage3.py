@@ -21,6 +21,31 @@ class SE_block(nn.Module):
         x1 = self.sigmod(x1)
         x = x * x1
         return x
+    
+class Conv1d_Mlp(nn.Module):
+    '''
+    1d convlution mlp, input x (B, N, C)
+    '''
+    def __init__(self, dim: int, 
+                 mlp_ratio: float=4.,
+                 drop: float=0.,
+                 act_layer: nn.Module=nn.GELU,):
+        super().__init__()
+        self.fc1 = nn.Conv1d(dim, int(dim*mlp_ratio), kernel_size=1)
+        self.act = act_layer()
+        self.drop1 = nn.Dropout(drop)
+        self.bn = nn.BatchNorm1d(int(dim*mlp_ratio))
+        self.fc2 = nn.Conv1d(int(dim*mlp_ratio), dim, kernel_size=1)
+        self.drop2 = nn.Dropout(drop)
+        
+    def forward(self, x):
+        x = self.fc1(x.permute(0, 2, 1))
+        x = self.act(x)
+        x = self.drop1(x)
+        x = self.bn(x)
+        x = self.fc2(x)
+        x = self.drop2(x).permute(0, 2, 1)
+        return x
 
 
 class CLSAttention(nn.Module):
@@ -56,7 +81,7 @@ class CLSAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
         
         # attn: BH1(C/H) @ BH(C/H)N -> BH1N
-        attn = q @ k.transpose(-2, -1) / self.scale
+        attn = q @ k.transpose(-2, -1) * self.scale
         attn = attn.softmax(dim=-1) # dim that will compute softmax, every slice along this dim will sum to 1, for attn case, is N
         attn = self.attn_drop(attn)
         

@@ -73,7 +73,7 @@ _C.MODEL.QK_NORM = True
 ## Layer Scale
 _C.MODEL.LAYER_SCALE = 1e-5
 # token SE
-_C.MODEL.TOKEN_SE = False
+_C.MODEL.TOKEN_SE = 'linear'
 # qkv bias
 _C.MODEL.QKV_BIAS = False
 
@@ -186,8 +186,9 @@ def get_config(args):
     if not config.SYSTEM.EXPERIMENT_PATH == '':
         now = datetime.datetime.now()
         time_str = now.strftime("[%m-%d]-[%H-%M]")
-        if not os.path.exists(f'{config.SYSTEM.EXPERIMENT_PATH}_{time_str}'):
-            os.makedirs(f'{config.SYSTEM.EXPERIMENT_PATH}_{time_str}')
+        config.SYSTEM.EXPERIMENT_PATH = f'{config.SYSTEM.EXPERIMENT_PATH}_{time_str}'
+        if not os.path.exists(config.SYSTEM.EXPERIMENT_PATH):
+            os.makedirs(config.SYSTEM.EXPERIMENT_PATH)
         config.SYSTEM.LOG = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.LOG)
         config.SYSTEM.CHECKPOINT = os.path.join(config.SYSTEM.EXPERIMENT_PATH, config.SYSTEM.CHECKPOINT)
         if not os.path.exists(config.SYSTEM.CHECKPOINT):

@@ -75,13 +75,18 @@ def top1_accuracy(output, targets):
     acc = correct.float().sum() * 100. / targets.size(0)
     return acc
 
-def load_weights(config, model, logger):
+def load_weights(config, model, logger, finetune=False):
     '''
     only load inference weights
     '''
     checkpoint = torch.load(config.TRAIN.RESUME)
-    missing, unexcepted = model.load_state_dict(checkpoint, strict=False)
-    logger.info(f'FINETUNE Missing: {missing},\t Unexcepted: {unexcepted}\t')
+    # logger.info(f'Current Best: {checkpoint["max_acc"]}')
+    if finetune == True:
+        pops = _return_pop_keys(config, checkpoint)
+        for pop in pops:
+            checkpoint['state_dict'].pop(pop)
+    missing, unexcepted = model.load_state_dict(checkpoint['state_dict'], strict=False)
+    logger.info(f'Missing: {missing},\t Unexcepted: {unexcepted}\t')
     return model
 
 def load_finetune_weights(config, model, logger):
@@ -104,6 +109,10 @@ def load_finetune_weights(config, model, logger):
 def _return_pop_keys(config, checkpoint):
     if config.MODEL.ARCH == 'RepVGGplus-L2pse':
         pop_keys = [key for key in checkpoint.keys() if 'aux.3' in key or 'linear' in key]
+    elif '14x14' in config.MODEL.ARCH:
+        pop_keys = ['head.weight', 'head.bias']
+    elif config.MODEL.ARCH == 'TransFER':
+        pop_keys = ['head.weight', 'head.bias']
     else:
         pop_keys = None
     return pop_keys

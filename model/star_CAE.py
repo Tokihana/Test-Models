@@ -7,7 +7,7 @@ import torch.nn as nn
 from timm.models.vision_transformer import LayerScale
 from timm.layers import DropPath
 # local
-from ir50 import iresnet50
+from .ir50 import iresnet50
 
 __all__ = ['StarBlock', 'SingleModel', 'get_stars']
 
@@ -368,10 +368,14 @@ def _get_single_model(config):
         mlp_layer = Linear_Mlp
     elif config.MODEL.MLP_LAYER == 'conv1d':
         mlp_layer = Conv1d_Mlp
+    else:
+        raise ValueError(f'not support mlp layer type "{mlp_layer}"')
     if config.MODEL.FC_LAYER == 'linear':
         fc_layer = Linear_FC
-    elif config.MODEL.FC_LAYER == 'conv1s':
+    elif config.MODEL.FC_LAYER == 'conv1d':
         fc_layer = Conv1d_FC
+    else:
+        raise ValueError(f'not support fc layer type "{fc_layer}"')
     model = SingleModel(img_size=config.DATA.IMG_SIZE,
                         mlp_ratio=config.MODEL.MLP_RATIO, 
                         num_classes=config.MODEL.NUM_CLASS,

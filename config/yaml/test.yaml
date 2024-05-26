@@ -2,7 +2,7 @@
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'running_tests'
-    EXPERIMENT_PATH: './results/RAF-DB_CLSFERCross'
+    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DN_AC-CAE_Conv2d_SE'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     
@@ -14,30 +14,30 @@ DATA:
     
     
 MODEL:
-    ARCH: 'starCAE-single'
+    ARCH: 'baseline_single'
     DEPTH: 8
     DROP_PATH: 0.5
     
-    STARBLOCK:
-        GATE: 'CAE'
-        USE_STAR: True
-        SHORTCUT: 'skip'
+    MLP_LAYER: 'linear'
+    TOKEN_SE: 'conv2d'
+    
     
 TRAIN:
-    EPOCHS: 5
-    BASE_LR: 3.5e-5
+    EPOCHS: 50
+    BASE_LR: 1e-5
     
     OPTIMIZER:
         NAME: 'esamAdam'
         EPS: 1e-8
         BETAS: (0.9, 0.999)
+        RHO: 0.05
         
     LR_SCHEDULER:
         NAME: 'exponential'
         GAMMA: 0.98
         
     CRITERION:
-        NAME: 'FocalLoss'
+        NAME: 'POSTERCrossEntropy'
         
 AUG:
     MIXUP: 0.
