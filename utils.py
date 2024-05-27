@@ -203,11 +203,58 @@ def tSNE(config, model, data_loader):
     )
     
     plt.figure()
-    plt.scatter(low_dim[:,0], low_dim[:,1], c=classes)
+    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes)
+    handles, _ = scatter.legend_elements(prop='colors')
+    if config.DATA.DATASET == 'CK+':
+        labels = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'netural', 'sadness', 'surprise']
+    elif config.DATA.DATASET == 'JAFFE':
+        labels = ['happy', 'anger', 'disgust', 'fear', 'netural', 'sadness', 'surprise']
+    elif config.DATA.DATASET == 'RAF-DB':
+        labels = ['surprise', 'fear', 'disgust', 'happy', 'sadness', 'anger', 'neutral']
+    plt.legend(handles, labels, loc='lower right')
     plt.savefig(os.path.join(config.SYSTEM.EXPERIMENT_PATH, f'{config.DATA.DATASET}_{config.MODEL.ARCH}_t-SNE.png'))
     plt.show()
     
+@torch.no_grad()
+def plot_confusion(config, model, data_loader):
+    from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+    import matplotlib.pyplot as plt
+    import numpy as np
+    B = len(data_loader.dataset)
+    y_true = np.zeros((B,))
+    y_pred = np.zeros((B,))
 
+    model = model.cuda()
+    model.eval()
+    loc=0
+    for idx, (images, targets) in enumerate(data_loader):
+        batch_size = images.shape[0]
+        images = images.cuda()
+        out = model(images)
+
+        y_pred[loc: loc+batch_size] = out.argmax(dim=1).cpu().detach().numpy()
+        y_true[loc: loc+batch_size] = targets.detach().numpy()
+        loc = loc + batch_size
+
+    if config.DATA.DATASET == 'CK+':
+        labels = [str(i) for i in range(8)]
+        label_map = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'netural', 'sadness', 'surprise']
+    elif config.DATA.DATASET == 'JAFFE':
+        labels = [str(i) for i in range(7)]
+        label_map = ['happy', 'anger', 'disgust', 'fear', 'netural', 'sadness', 'surprise']
+    elif config.DATA.DATASET == 'RAF-DB':
+        labels = [str(i) for i in range(7)]
+        label_map = ['surprise', 'fear', 'disgust', 'happy', 'sadness', 'anger', 'neutral']
+
+    disp = ConfusionMatrixDisplay.from_predictions(y_true, y_pred, 
+                                               normalize='true',
+                                               values_format='.2%',
+                                               xticks_rotation=30, 
+                                               display_labels=label_map,
+                                               cmap='Blues',)
+    plt.title(f'Confusion matrix on {config.DATA.DATASET}')
+    plt.savefig(os.path.join(config.SYSTEM.EXPERIMENT_PATH, f'{config.DATA.DATASET}_{config.MODEL.ARCH}_confusion_matrix.png'))
+    plt.show()
     
 
 @torch.no_grad()
@@ -217,14 +264,28 @@ def GradCAM(config, model, img_path):
     from pytorch_grad_cam.utils.image import show_cam_on_image
     from PIL import Image
     from torchvision import transforms
+    from PIL import Image
+    import torch
+    from torchvision.transforms import v2
     
     if '14x14' in config.MODEL.ARCH:
         target_layers = [model.head]
     elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single']:
         target_layers = [model.head.linear]
     
-    img = Image.open(img_path)
-    img = transforms.Resize(config.DATA.IMG_SIZE)(img)
-    img = transforms.ToTensor()(img)
-    input_img = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    input_img = input_img.unsqueeze(0)
+    
+    img = Image.open('./test.jpg')
+    model_transform = v2.Compose([
+        v2.Resize(112),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    visual_transform = v2.Compose([
+        v2.Resize(112),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+    ])
+    input_tensor = model_transform(img)
+    input_tensor = input_tensor.unsqueeze(0)# Create an input tensor image for your model..
+    rgb_img = visual_transform(img).permute(1, 2, 0).numpy()

@@ -7,42 +7,41 @@ SYSTEM:
     PRINT_FREQ: 30
     
 DATA:
-    IMG_SIZE: 112
-    BATCH_SIZE: 64
+    BATCH_SIZE: 200
     DATASET: 'JAFFE'
-    DATA_PATH: '../FERdatasets/JAFFE'
+    DATA_PATH: '../autodl-tmp/JAFFE'
+    IMG_SIZE: 112
     
 MODE:
-    T_SNE: True
+    FINETUNE: True
     
 MODEL:
-    ARCH: '14x14_CLSFER_addpatches'
+    ARCH: 'AC-CAE_single'
     DEPTH: 8
     DROP_PATH: 0.5
+    MLP_RATIO: 4.
     
     MLP_LAYER: 'linear'
-    TOKEN_SE: 'conv2d'
-    
+    TOKEN_SE: 'linear'
     
 TRAIN:
     EPOCHS: 200
-    BASE_LR: 3.5e-5
-    RESUME: 'D:\College\projects\autodl-tmp\results\JAFFE_AC-CAE_[05-26]-[01-27]_95.35\checkpoint\best.pth'
+    BASE_LR: 1e-4
+    RESUME: 'autodl-tmp/results/RAF-DN_AC-CAE_[05-26]-[18-31]_89.830/checkpoint/best.pth'
     
     OPTIMIZER:
-        NAME: 'esamAdam'
-        EPS: 1e-8
-        BETAS: (0.9, 0.999)
-        RHO: 0.05
+        NAME: 'samAdam'
+        RHO: 0.1
         
     LR_SCHEDULER:
         NAME: 'exponential'
-        GAMMA: 0.98
         
     CRITERION:
         NAME: 'POSTERCrossEntropy'
+        LABEL_SMOOTHING: 0.1
         
 AUG:
     MIXUP: 0.
+    
     
     

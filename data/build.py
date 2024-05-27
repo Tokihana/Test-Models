@@ -19,7 +19,7 @@ def build_loader(config):
                                                num_workers=config.DATA.NUM_WORKERS,
                                                pin_memory=config.DATA.PIN_MEMORY,
                                                #drop_last=True)
-                                               drop_last=False) # may drop imbalanced class when dataset is imbalanced
+                                               drop_last=True) # may drop imbalanced class when dataset is imbalanced
     val_loader = torch.utils.data.DataLoader(val_dataset,
                                              shuffle=False,
                                              batch_size=config.DATA.BATCH_SIZE,
@@ -100,14 +100,14 @@ def _get_transform(config, img_size=224):
         v2.Resize((img_size, img_size)),
         v2.RandomHorizontalFlip(),
         v2.ToImage(),
-        v2.ToDtype(torch.float32),
+        v2.ToDtype(torch.float32, scale=True),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         v2.RandomErasing(p=config.DATA.ERASING_P, scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
-        v2.ToDtype(torch.float32),
+        v2.ToDtype(torch.float32, scale=True),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     return train_transform, val_transform
@@ -121,14 +121,14 @@ def _get_rafdb_transform(img_size=224):
                         # note that ToImage() only accept the inputs with legth 3
         #v2.Normalize(mean, std),
         v2.ToImage(),
-        v2.ToDtype(torch.float32),
+        v2.ToDtype(torch.float32, scale=True),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         v2.RandomErasing(scale=config.DATA.ERASING_SCALE),
     ])
     val_transform = v2.Compose([
         v2.Resize((img_size, img_size)),
         v2.ToImage(),
-        v2.ToDtype(torch.float32),
+        v2.ToDtype(torch.float32, scale=True),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
     return train_transform, val_transform

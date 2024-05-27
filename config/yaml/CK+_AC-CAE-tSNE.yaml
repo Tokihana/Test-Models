@@ -1,16 +1,16 @@
-# RAF-DB_AC-CAE-tSNE.yaml
+# CK+_AC-CAE-tSNE.yaml
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 't-SNE'
-    EXPERIMENT_PATH: '../autodl-tmp/results/RAF-DB_AC-CAE_tSNE'
+    EXPERIMENT_PATH: '../autodl-tmp/results/CK+_AC-CAE_tSNE'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     
 DATA:
     IMG_SIZE: 112
     BATCH_SIZE: 64
-    DATASET: 'RAF-DB'
-    DATA_PATH: '../FERdatasets/RAF-DB'
+    DATASET: 'CK+'
+    DATA_PATH: '../FERdatasets/CK+'
     
 MODE:
     T_SNE: True
@@ -21,13 +21,13 @@ MODEL:
     DROP_PATH: 0.5
     
     MLP_LAYER: 'linear'
-    TOKEN_SE: 'conv2d'
+    TOKEN_SE: 'conv1d'
     
     
 TRAIN:
     EPOCHS: 200
     BASE_LR: 3.5e-5
-    RESUME: 'D:\College\projects\autodl-tmp\AC-CAE_best\RAF-DB\RAF-DB_AC-CAE_[05-27]-[17-23]_89.18\checkpoint\best.pth'
+    RESUME: 'D:\College\projects\autodl-tmp\AC-CAE_best\CK+\CK+_AC-CAE_[05-27]-[07-12]_100.00\checkpoint\best.pth'
     
     OPTIMIZER:
         NAME: 'esamAdam'

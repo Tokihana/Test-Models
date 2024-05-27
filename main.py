@@ -14,13 +14,13 @@ from timm.utils import accuracy, AverageMeter
 from config.config import get_config
 from data.build import build_loader
 from train import create_logger, build_optimizer, build_scheduler, build_criterion
-from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput, disable_running_stats, enable_running_stats, load_weights, tSNE
+from utils import save_checkpoint, load_checkpoint, top1_accuracy, load_finetune_weights, compute_flop_params, throughput, disable_running_stats, enable_running_stats, load_weights, tSNE, plot_confusion
 from model import create_model
 
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/SFEW_AC_CAE_test.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/RAF-DB_AC-CAE-tSNE.yaml', type=str, help='path to config yaml')
 
     args, unparsed = parser.parse_known_args()
     config = get_config(args)
@@ -71,6 +71,7 @@ def main():
         model = load_weights(config, model, logger)
         acc, loss = validate(config=config, model=model, data_loader=val_loader, criterion=nn.CrossEntropyLoss(), logger=logger)
         logger.info(f'Acc: {acc:.3f}%, Loss: {loss:.3f}%')
+        plot_confusion(config, model, val_loader)
         return
     
     if config.MODE.T_SNE:
