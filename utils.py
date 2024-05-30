@@ -211,6 +211,12 @@ def tSNE(config, model, data_loader):
         labels = ['happy', 'anger', 'disgust', 'fear', 'netural', 'sadness', 'surprise']
     elif config.DATA.DATASET == 'RAF-DB':
         labels = ['surprise', 'fear', 'disgust', 'happy', 'sadness', 'anger', 'neutral']
+    elif config.DATA.DATASET == 'FERPlus':
+        labels = ['neutral', 'happiness', 'surprise', 'sadness', 'anger', 'disgust', 'fear', 'contempt']
+    elif config.DATA.DATASET == 'AffectNet_7':
+        labels = ['neutral', 'happy', 'sad', 'surprise', 'fear', 'disgust', 'anger']
+    elif config.DATA.DATASET == 'AffectNet_8':
+        labels = ['neutral', 'happy', 'sad', 'surprise', 'fear', 'disgust', 'anger', 'contempt']
     plt.legend(handles, labels, loc='lower right')
     plt.savefig(os.path.join(config.SYSTEM.EXPERIMENT_PATH, f'{config.DATA.DATASET}_{config.MODEL.ARCH}_t-SNE.png'))
     plt.show()

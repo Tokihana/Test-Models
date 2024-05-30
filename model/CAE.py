@@ -264,11 +264,11 @@ class CAEBlock(nn.Module):
         B, N, C = x.shape
         inputs = x
         # BNC -> B1C
-        x_cls = x[:, 0:1, ...].clone() + self.drop_path1(self.ls1(self.attn(self.norm1(x))))    
+        x_cls = x[:, 0:1, ...] + self.drop_path1(self.ls1(self.attn(self.norm1(x))))    
             
         # mlp
-        x = torch.cat((x_cls, x[:, 1:, ...].clone()), dim=1)
-        x = self.fc(x) + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls)))).expand(-1, N, -1)
+        x = torch.cat((x_cls, self.fc(x[:, 1:, ...])), dim=1)
+        x = x + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls)))).expand(-1, N, -1)
             
         return x
 

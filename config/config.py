@@ -30,7 +30,7 @@ _C.SYSTEM.PRINT_FREQ = 100
 ## ----------------------------------------------
 _C.DATA = CN()
 # datasets configs
-# name of dataset, RAF-DB for default, supported: RAF-DB, AffectNet_7, AffectNet_8
+# name of dataset, RAF-DB for default, supported: RAF-DB, AffectNet_7, AffectNet_8, FERPlus, JAFFE, CK+
 _C.DATA.DATASET = 'RAF-DB'
 # path to dataset
 _C.DATA.DATA_PATH = '../datasets/RAF-DB'
