@@ -12,14 +12,22 @@ def build_loader(config):
     config.defrost()
     train_dataset, val_dataset, config.MODEL.NUM_CLASS = build_dataset(config=config)
     config.freeze()
-    train_loader = torch.utils.data.DataLoader(train_dataset,
+    if config.DATA.IMBALANCED_SAMPLER:
+        train_loader = torch.utils.data.DataLoader(train_dataset,
                                                sampler=ImbalancedDatasetSampler(train_dataset),
                                                # shuffle=True, # not need to specified when use sampler
                                                batch_size=config.DATA.BATCH_SIZE,
                                                num_workers=config.DATA.NUM_WORKERS,
                                                pin_memory=config.DATA.PIN_MEMORY,
-                                               #drop_last=True)
-                                               drop_last=True) # may drop imbalanced class when dataset is imbalanced
+                                               drop_last=True)
+    else: # not config.DATA.IMBALANCED_SAMPLER
+        train_loader = torch.utils.data.DataLoader(train_dataset,
+                                               # sampler=ImbalancedDatasetSampler(train_dataset),
+                                               shuffle=True, # not need to specified when use sampler
+                                               batch_size=config.DATA.BATCH_SIZE,
+                                               num_workers=config.DATA.NUM_WORKERS,
+                                               pin_memory=config.DATA.PIN_MEMORY,
+                                               drop_last=True)
     val_loader = torch.utils.data.DataLoader(val_dataset,
                                              shuffle=False,
                                              batch_size=config.DATA.BATCH_SIZE,

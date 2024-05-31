@@ -381,6 +381,10 @@ class SingleModel(nn.Module):
         ## classification head
         out = self.head(x_cls)
         return out.squeeze()
+
+
+class MultiScaleBlock(nn.Module):
+    
     
 ### ---------------------------------------------
 # create_model

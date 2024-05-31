@@ -47,6 +47,8 @@ _C.DATA.BATCH_SIZE = 64
 _C.DATA.NUM_WORKERS = 8
 # use pin memory or not
 _C.DATA.PIN_MEMORY = True
+# use Imbalance sampler or not
+_C.DATA.IMBALANCED_SAMPLER = False
 
 ## ----------------------------------------------
 # MODEL settings
