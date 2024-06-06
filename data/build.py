@@ -30,7 +30,7 @@ def build_loader(config):
                                                drop_last=True)
     val_loader = torch.utils.data.DataLoader(val_dataset,
                                              shuffle=False,
-                                             batch_size=config.DATA.BATCH_SIZE,
+                                             batch_size=config.DATA.VAL_BATCH_SIZE,
                                              num_workers=config.DATA.NUM_WORKERS,
                                              pin_memory=config.DATA.PIN_MEMORY,
                                              drop_last=False)

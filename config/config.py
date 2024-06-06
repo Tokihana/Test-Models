@@ -43,6 +43,8 @@ _C.DATA.ERASING_P = 0.5
 _C.DATA.IMG_SIZE = 224
 # batch size
 _C.DATA.BATCH_SIZE = 64
+# val batch size
+_C.DATA.VAL_BATCH_SIZE = 200
 # num of workers
 _C.DATA.NUM_WORKERS = 8
 # use pin memory or not
