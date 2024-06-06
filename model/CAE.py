@@ -308,6 +308,57 @@ class CAEBlock(nn.Module):
             
         return x
 
+class StarBlock(nn.Module):
+    def __init__(self, dim: int,
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias: bool=False,
+                qk_norm: bool=False,
+                init_values: Optional[float] = None,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                mlp_layer: nn.Module=Linear_Mlp,
+                ):
+        super().__init__()
+        # CAE
+        self.norm1 = norm_layer(dim)
+        self.attn = CLSAttention(dim, 
+                                num_heads=num_heads,
+                                qkv_bias=qkv_bias,
+                                qk_norm=qk_norm,
+                                attn_drop=attn_drop,
+                                proj_drop=proj_drop,
+                                norm_layer=norm_layer,)
+        
+        self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        self.drop_path1 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        
+        # mlp 
+        self.fc = Linear_FC(in_chans=dim, out_chans=dim)
+        self.norm2 = norm_layer(dim)
+        self.mlp = mlp_layer(dim=dim, mlp_ratio=mlp_ratio, drop=proj_drop, act_layer=act_layer)
+        self.ls2 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
+        self.drop_path2 = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        
+    def forward(self, x):
+        '''
+        x (B, N, C)
+        '''
+        B, N, C = x.shape
+        inputs = x
+        # BNC -> B1C
+        x_cls = x[:, 0:1, ...] + self.drop_path1(self.ls1(self.attn(self.norm1(x))))    
+            
+        # mlp
+        x_cls = x_cls + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls))))
+        new_patches = self.fc(x[:, 1:, ...]) * x_cls
+        x = torch.cat((x_cls, new_patches), dim=1)
+            
+        return x
+
 
 class MultiScaleBlock(nn.Module):
     def __init__(self, dims: List[int] = [128, 256, 512],
@@ -420,7 +471,7 @@ class SingleModel(nn.Module):
         dpr = [x.item() for x in torch.linspace(0, drop_path, depth)]
         
         ## blocks 
-        if block == CAEBlock: # using star block
+        if block == CAEBlock or block == StarBlock: # using star block
             self.blocks = nn.Sequential(*[
                 block(dim=embed_dim, 
                       num_heads=num_heads, 
@@ -595,7 +646,9 @@ class SingleStyleMultiScaleModel(nn.Module):
 ### ---------------------------------------------
 def get_AC_CAE(config):
     if config.MODEL.ARCH == 'AC-CAE_single':
-        return _get_single_CAE(config)
+        return _get_single_ACCAE(config)
+    elif config.MODEL.ARCH == 'Star-CAE_single':
+        return _get_single_StarCAE(config)
     elif config.MODEL.ARCH == 'baseline_single':
         return _get_single_baseline(config)
     elif config.MODEL.ARCH == 'SingleStyle_multiCAE':
@@ -625,7 +678,7 @@ def _get_single_baseline(config):
                         mlp_layer=mlp_layer,)
     return model
 
-def _get_single_CAE(config):
+def _get_single_ACCAE(config):
     if config.MODEL.MLP_LAYER == 'linear':
         mlp_layer = Linear_Mlp
     elif config.MODEL.MLP_LAYER == 'conv1d':
@@ -644,6 +697,28 @@ def _get_single_CAE(config):
                         head_drop=config.MODEL.HEAD_DROP,
                         depth=config.MODEL.DEPTH,
                         block=CAEBlock,
+                        mlp_layer=mlp_layer,)
+    return model
+
+def _get_single_StarCAE(config):
+    if config.MODEL.MLP_LAYER == 'linear':
+        mlp_layer = Linear_Mlp
+    elif config.MODEL.MLP_LAYER == 'conv1d':
+        mlp_layer = Conv1d_Mlp
+    else:
+        raise ValueError(f'not support mlp layer type "{mlp_layer}"')
+    model = SingleModel(img_size=config.DATA.IMG_SIZE,
+                        mlp_ratio=config.MODEL.MLP_RATIO, 
+                        num_classes=config.MODEL.NUM_CLASS,
+                        qkv_bias=config.MODEL.QKV_BIAS,
+                        qk_norm=config.MODEL.QK_NORM,
+                        init_values=config.MODEL.LAYER_SCALE,
+                        attn_drop=config.MODEL.ATTN_DROP,
+                        proj_drop=config.MODEL.PROJ_DROP,
+                        drop_path=config.MODEL.DROP_PATH,
+                        head_drop=config.MODEL.HEAD_DROP,
+                        depth=config.MODEL.DEPTH,
+                        block=StarBlock,
                         mlp_layer=mlp_layer,)
     return model
 

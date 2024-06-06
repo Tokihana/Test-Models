@@ -77,7 +77,7 @@ def create_model(args, config):
         model = PosterV2()
     elif 'star' in config.MODEL.ARCH: # 'starCAE-single'
         model = get_stars(config)
-    elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single', 'SingleStyle_multiCAE', 'SingleStyle_multiBaseline']:
+    elif config.MODEL.ARCH in ['AC-CAE_single', 'Star-CAE_single', 'baseline_single', 'SingleStyle_multiCAE', 'SingleStyle_multiBaseline']:
         model = get_AC_CAE(config)
     else:
         raise Exception('Unknown model architecture')

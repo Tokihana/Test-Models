@@ -8,13 +8,13 @@ SYSTEM:
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 32
+    BATCH_SIZE: 48
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
     
     
 MODEL:
-    ARCH: 'SingleStyle_multiCAE'
+    ARCH: 'Star-CAE_single'
     DEPTH: 8
     DROP_PATH: 0.5
     
