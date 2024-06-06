@@ -2,28 +2,25 @@
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'running_tests'
-    EXPERIMENT_PATH: '../autodl-tmp/results/CK+_AC-CAE'
+    EXPERIMENT_PATH: '../autodl-tmp/results/SingleStyle_multiCAE'
     SAVE_FREQ: 100
     PRINT_FREQ: 30
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 64
-    DATASET: 'CK+'
-    DATA_PATH: '../FERdatasets/CK+'
+    BATCH_SIZE: 32
+    DATASET: 'RAF-DB'
+    DATA_PATH: '../FERdatasets/RAF-DB'
     
     
 MODEL:
-    ARCH: 'AC-CAE_single'
+    ARCH: 'SingleStyle_multiCAE'
     DEPTH: 8
     DROP_PATH: 0.5
     
-    MLP_LAYER: 'linear'
-    TOKEN_SE: 'conv2d'
-    
     
 TRAIN:
-    EPOCHS: 200
+    EPOCHS: 20
     BASE_LR: 3.5e-5
     
     OPTIMIZER:

@@ -251,7 +251,7 @@ class StarBlock(nn.Module):
         
             
         # mlp
-        x_mlp = self.drop_path2(self.ls2(self.mlp(self.norm2(x_gate))))
+        x_mlp = x_gate + self.drop_path2(self.ls2(self.mlp(self.norm2(x_gate))))
         
         # shortcut
         if self.shortcut == 'skip':

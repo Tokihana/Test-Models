@@ -20,7 +20,7 @@ from model import create_model
 def parse_option():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config', default='./config/yaml/RAF-DB_AC-CAE-tSNE.yaml', type=str, help='path to config yaml')
+    parser.add_argument('--config', default='./config/yaml/test.yaml', type=str, help='path to config yaml')
 
     args, unparsed = parser.parse_known_args()
     config = get_config(args)

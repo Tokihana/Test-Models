@@ -1,6 +1,7 @@
 # inline dependencies
+import math
 import unittest
-from typing import Optional
+from typing import Optional, List
 # third-party dependencies
 import torch
 import torch.nn as nn
@@ -163,6 +164,40 @@ class SEhead(nn.Sequential):
             self.add_module('head_drop', nn.Dropout(head_drop))
         self.add_module('linear', nn.Linear(dim, num_classes))
 
+class DoubleConv(nn.Module):
+    """(convolution => [BN] => ReLU) * 2"""
+
+    def __init__(self, in_channels, out_channels, mid_channels=None):
+        super().__init__()
+        if not mid_channels:
+            mid_channels = out_channels
+        self.double_conv = nn.Sequential(
+            nn.Conv2d(in_channels, mid_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(mid_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        return self.double_conv(x)
+
+class Up(nn.Module):
+    def __init__(self, in_chans:int, out_chans:int, scale_factor:int=2, mode='bilinear', align_corners=True):
+        super().__init__()
+        self.up = nn.Upsample(scale_factor=scale_factor, mode=mode, align_corners=align_corners)
+        self.conv = DoubleConv(in_channels=in_chans, out_channels=out_chans)
+        
+    def forward(self, x):
+        B, N, C = x.shape
+        H = W = int(math.sqrt(N))
+        # BNC -> BCN -> BCHW
+        x = x.permute(0, 2, 1).reshape(B, C, H, W)
+        x = self.up(x)
+        x = self.conv(x)
+        x = x.flatten(2).transpose(-2, -1)
+        return x
 
 
 ### ---------------------------------------------
@@ -234,7 +269,7 @@ class CAEBlock(nn.Module):
                 drop_path: float=0.,
                 act_layer: nn.Module=nn.GELU,
                 norm_layer: nn.Module=nn.LayerNorm,
-                mlp_layer: nn.Module=Conv1d_Mlp,
+                mlp_layer: nn.Module=Linear_Mlp,
                 ):
         super().__init__()
         # CAE
@@ -267,10 +302,70 @@ class CAEBlock(nn.Module):
         x_cls = x[:, 0:1, ...] + self.drop_path1(self.ls1(self.attn(self.norm1(x))))    
             
         # mlp
-        x = torch.cat((x_cls, self.fc(x[:, 1:, ...])), dim=1)
-        x = x + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls)))).expand(-1, N, -1)
+        x_cls = x_cls + self.drop_path2(self.ls2(self.mlp(self.norm2(x_cls))))
+        new_patches = self.fc(x[:, 1:, ...]) + x_cls
+        x = torch.cat((x_cls, new_patches), dim=1)
             
         return x
+
+
+class MultiScaleBlock(nn.Module):
+    def __init__(self, dims: List[int] = [128, 256, 512],
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias: bool=False,
+                qk_norm: bool=False,
+                init_values: Optional[float] = None,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                mlp_layer: nn.Module=Conv1d_Mlp,
+                block: nn.Module=CAEBlock, 
+                ):
+        super().__init__()
+        if block == CAEBlock:
+            self.multi_scale_blocks = nn.ModuleList([
+                block(dim=dim, 
+                     num_heads=num_heads, 
+                     mlp_ratio=mlp_ratio,
+                     qkv_bias=qkv_bias,
+                     qk_norm=qk_norm,
+                     init_values=init_values,
+                     attn_drop=attn_drop,
+                     proj_drop=proj_drop,
+                     drop_path=drop_path,
+                     act_layer=act_layer,
+                     norm_layer=norm_layer,
+                     mlp_layer=mlp_layer,)
+            for dim in dims])
+        elif block == ViTBlock:
+            self.multi_scale_blocks = nn.ModuleList([
+                block(dim=dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio, 
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm, 
+                      init_values=init_values, 
+                      attn_drop=attn_drop, 
+                      proj_drop=proj_drop, 
+                      drop_path=drop_path,
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,)
+                for dim in dims])
+        self.upsample_s = Up(in_chans=dims[2], out_chans=dims[1], scale_factor=2, mode='bilinear', align_corners=True)
+        self.upsample_m = Up(in_chans=dims[1], out_chans=dims[0], scale_factor=2, mode='bilinear', align_corners=True)
+    def forward(self, xs):
+        '''
+        given xs List[Tensor]: list of token sequence in different scale
+        '''
+        N = len(xs)
+        x1, x2, x3 = [self.multi_scale_blocks[i](xs[i]) for i in range(N)]
+        x2 = x2 + self.upsample_s(x3)
+        x1 = x1 + self.upsample_m(x2)
+        xs = [x1, x2, x3]
+        return xs
 
 
 ### ---------------------------------------------
@@ -362,7 +457,7 @@ class SingleModel(nn.Module):
         
     def forward(self, x):
         # get stem output
-        _, x_ir, _ = self.irback(x)
+        _, _, x_ir = self.irback(x)
         if self.token_se == 'conv2d':
             x_ir = self.token_se_block(x_ir)
         x_embed = x_ir.flatten(2).transpose(-2, -1)
@@ -383,8 +478,117 @@ class SingleModel(nn.Module):
         return out.squeeze()
 
 
-class MultiScaleBlock(nn.Module):
+class SingleStyleMultiScaleModel(nn.Module):
+    '''
+    simply concat the features at different scale and process the concatenated tokens in a single model
+    '''
+    def __init__(self, 
+                img_size: int=112,
+                embed_len: int=196,
+                embed_dim: int=768,
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias=False,
+                qk_norm=True,
+                init_values: Optional[float]=None,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                head_drop: float=0.,
+                depth: int=8,
+                num_classes: int=7,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                block: nn.Module=ViTBlock,
+                mlp_layer: nn.Module=Linear_Mlp,
+                token_se: str='linear'):
+        super().__init__()
+        self.token_se = token_se
+        # ir50 backbone
+        self.irback = iresnet50(num_features=num_classes)
+        checkpoint = torch.load('./model/pretrain/ir50_backbone.pth')
+        miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
+        print(f'Miss: {miss},\t Unexcept: {unexcepted}')
+        del checkpoint, miss, unexcepted
+
+        o = self.irback(torch.zeros((1, 3, img_size, img_size)))
+        dims = [o[0].shape[1], o[1].shape[1], o[2].shape[1]]
+        self.embed1 = nn.Sequential(nn.Conv2d(dims[0], dims[1], kernel_size=3, stride=2, padding=1),
+                                    nn.Conv2d(dims[1], embed_dim, kernel_size=3, stride=2, padding=1),)
+        self.embed2 = nn.Conv2d(dims[1], embed_dim, kernel_size=3, stride=2, padding=1)
+        self.embed3 = nn.Conv2d(dims[2], embed_dim, kernel_size=1)
+        
+        if token_se == 'linear':
+            self.token_se_block = SE_block(dim=embed_len)
+        elif token_se == 'conv2d':
+            self.token_se_block = Conv_SE(dim=embed_dim)
+        elif token_se == 'conv1d':
+            self.token_se_block = Conv1d_SE(dim=embed_len)
+        
+        # running blocks
+        ## cls token and positional embedding
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.pos_embed = nn.Parameter(torch.zeros(1, embed_len*3 + 1, embed_dim))
+        ## stochastic depth drop path
+        dpr = [x.item() for x in torch.linspace(0, drop_path, depth)]
+        
+        ## blocks 
+        if block == CAEBlock: # using star block
+            self.blocks = nn.Sequential(*[
+                block(dim=embed_dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=dpr[i],
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,
+                      mlp_layer=mlp_layer,)
+            for i in range(depth)])
+        elif block == ViTBlock:
+            self.blocks = nn.Sequential(*[
+                block(dim=embed_dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio, 
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm, 
+                      init_values=init_values, 
+                      attn_drop=attn_drop, 
+                      proj_drop=proj_drop, 
+                      drop_path=dpr[i],
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,)
+                for i in range(depth)])
+        else:
+            raise ModuleNotFoundError(f'unsupported block type {block}')
+        
+        self.norm = norm_layer(embed_dim)
+        self.head = SEhead(dim=embed_dim, num_classes=num_classes, head_drop=head_drop)
+        
+    def forward(self, x):
+        # get stem output
+        x1, x2, x3 = self.irback(x)
+        x1, x2, x3 = self.embed1(x1).flatten(2).transpose(-2, -1), self.embed2(x2).flatten(2).transpose(-2, -1), self.embed3(x3).flatten(2).transpose(-2, -1)
+        
+        x_embed = torch.cat([x1, x2, x3], dim=1)
+        x_cls = self.cls_token.expand(x_embed.shape[0], -1, -1)
+        x = torch.cat((x_cls, x_embed), dim=1)
+        x = x + self.pos_embed
+        
+        # process blocks
+        x = self.blocks(x)
+        x = self.norm(x)
+        
+        # output
+        x_cls = x[:, 0:1, ...]
+        ## classification head
+        out = self.head(x_cls)
+        return out.squeeze()
     
+
     
 ### ---------------------------------------------
 # create_model
@@ -394,6 +598,10 @@ def get_AC_CAE(config):
         return _get_single_CAE(config)
     elif config.MODEL.ARCH == 'baseline_single':
         return _get_single_baseline(config)
+    elif config.MODEL.ARCH == 'SingleStyle_multiCAE':
+        return _get_single_style_multi_CAE(config)
+    elif config.MODEL.ARCH == 'SingleStyle_multiBaseline':
+        return _get_single_style_multi_baseline(config)
 
 def _get_single_baseline(config):
     if config.MODEL.MLP_LAYER == 'linear':
@@ -438,10 +646,55 @@ def _get_single_CAE(config):
                         block=CAEBlock,
                         mlp_layer=mlp_layer,)
     return model
+
+def _get_single_style_multi_CAE(config):
+    model = SingleStyleMultiScaleModel(img_size=config.DATA.IMG_SIZE,
+                        mlp_ratio=config.MODEL.MLP_RATIO, 
+                        num_classes=config.MODEL.NUM_CLASS,
+                        qkv_bias=config.MODEL.QKV_BIAS,
+                        qk_norm=config.MODEL.QK_NORM,
+                        init_values=config.MODEL.LAYER_SCALE,
+                        attn_drop=config.MODEL.ATTN_DROP,
+                        proj_drop=config.MODEL.PROJ_DROP,
+                        drop_path=config.MODEL.DROP_PATH,
+                        head_drop=config.MODEL.HEAD_DROP,
+                        depth=config.MODEL.DEPTH,
+                        block=CAEBlock,)
+    return model
+
+def _get_single_style_multi_baseline(config):
+    model = SingleStyleMultiScaleModel(img_size=config.DATA.IMG_SIZE,
+                        mlp_ratio=config.MODEL.MLP_RATIO, 
+                        num_classes=config.MODEL.NUM_CLASS,
+                        qkv_bias=config.MODEL.QKV_BIAS,
+                        qk_norm=config.MODEL.QK_NORM,
+                        init_values=config.MODEL.LAYER_SCALE,
+                        attn_drop=config.MODEL.ATTN_DROP,
+                        proj_drop=config.MODEL.PROJ_DROP,
+                        drop_path=config.MODEL.DROP_PATH,
+                        head_drop=config.MODEL.HEAD_DROP,
+                        depth=config.MODEL.DEPTH,
+                        block=ViTBlock,)
+    return model
     
 ### ---------------------------------------------
 # unittest
 ### ---------------------------------------------
+class UtilTests(unittest.TestCase):
+    def test_Double_Conv(self):
+        B, C, H, W = 5, 512, 7, 7
+        x = torch.rand((B, C, H, W))
+        layer = DoubleConv(in_channels=C, out_channels=C)
+        out = layer(x)
+        self.assertEqual(out.shape, torch.Size([B, C, H, W]))
+        
+    def test_Up(self):
+        B, N, C = 5, 49, 512
+        x = torch.rand((B, N, C))
+        layer = Up(in_chans=C, out_chans=C//2)
+        out = layer(x)
+        self.assertEqual(out.shape, torch.Size([B, 196, C//2]))
+
 class ClassAttentionTests(unittest.TestCase):
     '''
     test class attention computation.
@@ -462,6 +715,22 @@ class BlockTests(unittest.TestCase):
         block = CAEBlock(dim=C)
         self.assertEqual(block(x).shape, torch.Size([B, N, C]))
 
+    def test_MultiScaleBlock(self):
+        B = 5
+        Ns = [28*28, 14*14, 7*7]
+        Cs = [128, 256, 512]
+        xs = [torch.rand((B, Ns[i], Cs[i])) for i in range(3)]
+
+        block = MultiScaleBlock(dims=Cs)
+        out = block(xs)
+        for i in range(3):
+            self.assertEqual(out[i].shape, torch.Size([B, Ns[i], Cs[i]]))
+
+        block = MultiScaleBlock(dims=Cs, block=ViTBlock)
+        out = block(xs)
+        for i in range(3):
+            self.assertEqual(out[i].shape, torch.Size([B, Ns[i], Cs[i]]))
+
 class ModelTests(unittest.TestCase):
     def test_baseline(self):
         B, C, H, W = 5, 3, 112, 112
@@ -479,6 +748,18 @@ class ModelTests(unittest.TestCase):
         out = model(images)
         self.assertEqual(out.shape, torch.Size([B, num_class]))
 
+    def test_SingleStyleMultiScaleModel(self):
+        B, C, H, W = 5, 3, 112, 112
+        num_class = 7
+        images = torch.rand((B, C, H, W))
+        # TEST CAEBlock
+        model = SingleStyleMultiScaleModel(num_classes=num_class, block=CAEBlock)
+        out = model(images)
+        self.assertEqual(out.shape, torch.Size([B, num_class]))
+        # TEST ViTBlock
+        model = SingleStyleMultiScaleModel(num_classes=num_class, block=CAEBlock)
+        out = model(images)
+        self.assertEqual(out.shape, torch.Size([B, num_class]))
     
 if __name__ == '__main__':
     unittest.main()
