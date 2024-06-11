@@ -14,7 +14,7 @@ DATA:
     
     
 MODEL:
-    ARCH: 'Star-CAE_single'
+    ARCH: 'CrossStarCAE_single'
     DEPTH: 8
     DROP_PATH: 0.5
     

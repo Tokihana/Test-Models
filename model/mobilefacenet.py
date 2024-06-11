@@ -159,19 +159,19 @@ class MobileFaceNet(Module):
 
         out = self.conv_23(out)
 
-        out = self.conv_3(out)
+        out3 = self.conv_3(out)
 
-        out = self.conv_34(out)
+        out = self.conv_34(out3)
 
-        out = self.conv_4(out)
+        out4 = self.conv_4(out)
 
-        out = self.conv_45(out)
+        out = self.conv_45(out4)
 
         out = self.conv_5(out)
 
         conv_features = self.conv_6_sep(out)    ##### [B, 512, 7, 7]
         out = self.output_layer(conv_features)  ##### [B, 136]
-        return out, conv_features
+        return out3, out4, conv_features
 
 
 # model = MobileFaceNet([112, 112],136)

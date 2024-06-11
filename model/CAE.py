@@ -12,6 +12,7 @@ from timm.layers.helpers import to_2tuple
 from functools import partial
 # local dependencies
 from .ir50 import iresnet50 # which return x2, x3, x4
+from .mobilefacenet import MobileFaceNet
 
 ### ------------------------
 # utils
@@ -199,6 +200,54 @@ class Up(nn.Module):
         x = x.flatten(2).transpose(-2, -1)
         return x
 
+class Feature_Extractor(nn.Module):
+    '''
+    extract ir and lm features
+    '''
+    def __init__(self, ir_path = '', lm_path = ''):
+        super().__init__()
+        # ir backbone
+        self.irback = iresnet50(num_features=7)
+        if not ir_path == '':
+            checkpoint = torch.load(ir_path)
+            miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
+            print(f'load IR50 check from {ir_path},\n Miss: {miss},\t Unexcept: {unexcepted}')
+            del checkpoint, miss, unexcepted
+        # lm backbone
+        self.lmback = MobileFaceNet([112, 112], 136)
+        if not lm_path == '':
+            checkpoint = torch.load(lm_path, map_location=lambda storage, loc: storage)
+            miss, unexcepted = self.lmback.load_state_dict(checkpoint['state_dict'], strict=False)
+            print(f'load MobileFaceNet check from {lm_path},\n Miss: {miss},\t Unexcept: {unexcepted}')
+            del checkpoint, miss, unexcepted
+
+        # lm projections
+        dim1, dim2 = [64, 128], [128, 256]
+        self.proj1 = nn.Sequential(*[
+            nn.Conv2d(in_channels=dim1[0], out_channels=dim1[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.Conv2d(in_channels=dim1[1], out_channels=dim1[1], kernel_size=3, padding=1, stride=1, groups=dim1[1]), # depth-wise
+            nn.Conv2d(in_channels=dim1[1], out_channels=dim1[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.BatchNorm2d(dim1[1])
+        ])
+        self.proj2 = nn.Sequential(*[
+            nn.Conv2d(in_channels=dim2[0], out_channels=dim2[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.Conv2d(in_channels=dim2[1], out_channels=dim2[1], kernel_size=3, padding=1, stride=1, groups=dim2[1]), # depth-wise
+            nn.Conv2d(in_channels=dim2[1], out_channels=dim2[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.BatchNorm2d(dim2[1])
+        ])
+
+    def forward(self, x):
+        x_ir = self.irback(x)
+        x_lm = self.lmback(x)
+        # project x_lm
+        x1, x2, x3 = x_lm
+        x1 = self.proj1(x1)
+        x2 = self.proj2(x2)
+        x_lm = [x1, x2, x3]
+
+        return x_ir, x_lm
+        
+
 
 ### ---------------------------------------------
 # Class Attention
@@ -251,7 +300,7 @@ class CLSAttention(nn.Module):
         x = self.proj_drop(x)
         
         return x
-    
+
     
 
 ### ---------------------------------------------
@@ -359,6 +408,64 @@ class StarBlock(nn.Module):
             
         return x
 
+class CrossCAEBlock(nn.Module):
+    def __init__(self, dim: int,
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias: bool=False,
+                qk_norm: bool=False,
+                init_values: Optional[float] = None,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                mlp_layer: nn.Module=Linear_Mlp,
+                block: nn.Module=CAEBlock, 
+                ):
+        super().__init__()
+        self.block_ir = block(dim=dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=drop_path,
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,
+                      mlp_layer=mlp_layer,)
+        self.block_lm = block(dim=dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=drop_path,
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,
+                      mlp_layer=mlp_layer,)
+
+    def forward(self, xs):
+        '''
+        xs List consist of x_ir, x_lm
+            x_ir (B, N, C) > [cls_lm, patches_ir]
+            x_lm (B, N, C) > [cls_ir, patches_lm]
+        '''
+        x_ir, x_lm = xs[0], xs[1]
+        # process block
+        x_ir = self.block_ir(x_ir)
+        x_lm = self.block_lm(x_lm)
+        # convert cls token
+        cls_ir, cls_lm = x_ir[:, 0:1, ...], x_lm[:, 0:1, ...]
+        x_ir = torch.concat((cls_lm, x_ir[:, 1:, ...]), dim=1)
+        x_lm = torch.concat((cls_ir, x_lm[:, 1:, ...]), dim=1)
+        
+        return [x_ir, x_lm]
+        
 
 class MultiScaleBlock(nn.Module):
     def __init__(self, dims: List[int] = [128, 256, 512],
@@ -508,7 +615,7 @@ class SingleModel(nn.Module):
         
     def forward(self, x):
         # get stem output
-        _, _, x_ir = self.irback(x)
+        _, x_ir, _ = self.irback(x)
         if self.token_se == 'conv2d':
             x_ir = self.token_se_block(x_ir)
         x_embed = x_ir.flatten(2).transpose(-2, -1)
@@ -526,6 +633,94 @@ class SingleModel(nn.Module):
         x_cls = x[:, 0:1, ...]
         ## classification head
         out = self.head(x_cls)
+        return out.squeeze()
+
+class CrossModel(nn.Module):
+    '''
+    use 14x14 feature maps from IR50, fed to {depth} layer blocks
+    '''
+    def __init__(self, 
+                img_size: int=112,
+                embed_len: int=196,
+                embed_dim: int=256,
+                num_heads: int=8,
+                mlp_ratio: float=4.,
+                qkv_bias=False,
+                qk_norm=True,
+                init_values: Optional[float]=None,
+                attn_drop: float=0.,
+                proj_drop: float=0.,
+                drop_path: float=0.,
+                head_drop: float=0.,
+                depth: int=8,
+                num_classes: int=7,
+                act_layer: nn.Module=nn.GELU,
+                norm_layer: nn.Module=nn.LayerNorm,
+                block: nn.Module=CAEBlock,
+                mlp_layer: nn.Module=Linear_Mlp,):
+        super().__init__()
+        # feature extractor
+        self.feature_extractor = Feature_Extractor(
+            ir_path = './model/pretrain/ir50_backbone.pth',
+            lm_path = './model/pretrain/mobilefacenet_model_best.pth.tar'
+        )
+
+        
+        # running blocks
+        ## cls token and positional embedding
+        self.cls_token_ir = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.cls_token_lm = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.pos_embed = nn.Parameter(torch.zeros(1, embed_len + 1, embed_dim))
+        ## stochastic depth drop path
+        dpr = [x.item() for x in torch.linspace(0, drop_path, depth)]
+        
+        ## blocks 
+        self.blocks = nn.Sequential(*[
+            CrossCAEBlock(dim=embed_dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=dpr[i],
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,
+                      mlp_layer=mlp_layer,
+                     block=block)
+            for i in range(depth)])
+        
+        self.norms = nn.ModuleList([norm_layer(embed_dim) for i in range(2)])
+        self.heads = nn.ModuleList([SEhead(dim=embed_dim, num_classes=num_classes, head_drop=head_drop) for i in range(2)])
+        
+    def forward(self, x):
+        # get stem output
+        x_irs, x_lms = self.feature_extractor(x)
+        _, x_ir, _ = x_irs
+        _, x_lm, _ = x_lms
+        
+        # consist cls token and positional embedding
+        ir_embed = x_ir.flatten(2).transpose(-2, -1)
+        lm_embed = x_lm.flatten(2).transpose(-2, -1)
+
+        ir_cls = self.cls_token_ir.expand(ir_embed.shape[0], -1, -1)
+        lm_cls = self.cls_token_lm.expand(lm_embed.shape[0], -1, -1)
+        x_ir = torch.cat((ir_cls, ir_embed), dim=1)
+        x_lm = torch.cat((lm_cls, lm_embed), dim=1)
+        x_ir = x_ir + self.pos_embed
+
+        x = [x_ir, x_lm]
+        
+        # process blocks
+        x = self.blocks(x)
+        x = [self.norms[i](x[i]) for i in range(2)]
+        
+        # output
+        x_cls = [branch[:, 0:1, ...] for branch in x]
+        ## classification head
+        out = [self.heads[i](x_cls[i]) for i in range(2)]
+        out = torch.mean(torch.stack(out, dim=0), dim=0)
         return out.squeeze()
 
 
@@ -655,6 +850,10 @@ def get_AC_CAE(config):
         return _get_single_style_multi_CAE(config)
     elif config.MODEL.ARCH == 'SingleStyle_multiBaseline':
         return _get_single_style_multi_baseline(config)
+    elif config.MODEL.ARCH == 'CrossACCAE_single':
+        return _get_single_CrossCAE(config, block=CAEBlock)
+    elif config.MODEL.ARCH == 'CrossStarCAE_single':
+        return _get_single_CrossCAE(config, block=StarBlock)
 
 def _get_single_baseline(config):
     if config.MODEL.MLP_LAYER == 'linear':
@@ -751,6 +950,21 @@ def _get_single_style_multi_baseline(config):
                         depth=config.MODEL.DEPTH,
                         block=ViTBlock,)
     return model
+
+def _get_single_CrossCAE(config, block):
+    model = CrossModel(img_size=config.DATA.IMG_SIZE,
+                        mlp_ratio=config.MODEL.MLP_RATIO, 
+                        num_classes=config.MODEL.NUM_CLASS,
+                        qkv_bias=config.MODEL.QKV_BIAS,
+                        qk_norm=config.MODEL.QK_NORM,
+                        init_values=config.MODEL.LAYER_SCALE,
+                        attn_drop=config.MODEL.ATTN_DROP,
+                        proj_drop=config.MODEL.PROJ_DROP,
+                        drop_path=config.MODEL.DROP_PATH,
+                        head_drop=config.MODEL.HEAD_DROP,
+                        depth=config.MODEL.DEPTH,
+                        block=block)
+    return model
     
 ### ---------------------------------------------
 # unittest
@@ -769,6 +983,18 @@ class UtilTests(unittest.TestCase):
         layer = Up(in_chans=C, out_chans=C//2)
         out = layer(x)
         self.assertEqual(out.shape, torch.Size([B, 196, C//2]))
+
+    def test_feature_extractor(self):
+        B, C, H, W = 5, 3, 112, 112
+        num_classes = 7
+        imgs = torch.rand((B, C, H, W))
+        feature_extractor = Feature_Extractor(
+            ir_path = './model/pretrain/ir50_backbone.pth',
+            lm_path = './model/pretrain/mobilefacenet_model_best.pth.tar'
+        )
+        x_ir, x_lm = feature_extractor(imgs)
+        for stage_ir, stage_lm in zip(x_ir, x_lm):
+            print(stage_ir.shape, stage_lm.shape)
 
 class ClassAttentionTests(unittest.TestCase):
     '''
@@ -806,7 +1032,39 @@ class BlockTests(unittest.TestCase):
         for i in range(3):
             self.assertEqual(out[i].shape, torch.Size([B, Ns[i], Cs[i]]))
 
+    def test_CrossCAEBlock(self):
+        '''
+        given input x_ir, x_lm in (B, N, C)
+        assume output both in (B, N, C)
+        '''
+        B, N, C = 5, 50, 512
+        x_ir = torch.rand((B, N, C))
+        x_lm = torch.rand((B, N, C))
+        xs = [x_ir, x_lm]
+        block = nn.Sequential(*[CrossCAEBlock(dim=C) for i in range(4)])
+        o1, o2 = block(xs)
+        self.assertEqual(o1.shape, torch.Size([B, N, C]))
+        self.assertEqual(o2.shape, torch.Size([B, N, C]))
+
 class ModelTests(unittest.TestCase):
+    def test_backbones(self):
+        '''
+        test the output of ir and lm backbone
+        '''
+        B, C, H, W = 5, 3, 112, 112
+        num_classes = 7
+        imgs = torch.rand((B, C, H, W))
+        ir_back = iresnet50(num_features=num_classes)
+        
+        x_ir = ir_back(imgs)
+        for ir_stage in x_ir:
+            print(ir_stage.shape)
+
+        lm_back = MobileFaceNet([112, 112], 136)
+        x_lm = lm_back(imgs)
+        for lm_stage in x_lm:
+            print(lm_stage.shape)
+        
     def test_baseline(self):
         B, C, H, W = 5, 3, 112, 112
         num_class = 7
@@ -834,6 +1092,15 @@ class ModelTests(unittest.TestCase):
         # TEST ViTBlock
         model = SingleStyleMultiScaleModel(num_classes=num_class, block=CAEBlock)
         out = model(images)
+        self.assertEqual(out.shape, torch.Size([B, num_class]))
+
+    def test_CrossModel(self):
+        B, C, H, W = 5, 3, 112, 112
+        num_class = 7
+        imgs = torch.rand((B, C, H, W))
+        model = CrossModel(num_classes=num_class)
+        out = model(imgs)
+        print(out.shape)
         self.assertEqual(out.shape, torch.Size([B, num_class]))
     
 if __name__ == '__main__':
