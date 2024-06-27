@@ -246,8 +246,6 @@ class Feature_Extractor(nn.Module):
         x_lm = [x1, x2, x3]
 
         return x_ir, x_lm
-        
-
 
 ### ---------------------------------------------
 # Class Attention
@@ -526,6 +524,8 @@ class MultiScaleBlock(nn.Module):
         return xs
 
 
+
+
 ### ---------------------------------------------
 # Model
 ### ---------------------------------------------
@@ -722,7 +722,8 @@ class CrossModel(nn.Module):
         out = [self.heads[i](x_cls[i]) for i in range(2)]
         out = torch.mean(torch.stack(out, dim=0), dim=0)
         return out.squeeze()
-
+    
+    
 
 class SingleStyleMultiScaleModel(nn.Module):
     '''

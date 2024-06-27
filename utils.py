@@ -203,7 +203,7 @@ def tSNE(config, model, data_loader):
     )
     
     plt.figure()
-    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes)
+    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes, s=1)
     handles, _ = scatter.legend_elements(prop='colors')
     if config.DATA.DATASET == 'CK+':
         labels = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'netural', 'sadness', 'surprise']

@@ -8,23 +8,22 @@ SYSTEM:
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 48
+    BATCH_SIZE: 16
+    VAL_BATCH_SIZE: 16
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
     
     
 MODEL:
-    ARCH: 'CrossStarCAE_single'
-    DEPTH: 8
-    DROP_PATH: 0.5
+    ARCH: 'CrossStageAC-CAE'
     
     
 TRAIN:
     EPOCHS: 20
-    BASE_LR: 3.5e-5
+    BASE_LR: 1e-4
     
     OPTIMIZER:
-        NAME: 'esamAdam'
+        NAME: 'Adam'
         EPS: 1e-8
         BETAS: (0.9, 0.999)
         RHO: 0.05

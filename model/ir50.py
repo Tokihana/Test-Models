@@ -155,10 +155,10 @@ class IResNet(nn.Module):
             x = self.conv1(x)
             x = self.bn1(x)
             x = self.prelu(x)
-            x1 = self.layer1(x)
-            x2 = self.layer2(x1)
-            x3 = self.layer3(x2)
-            x4 = self.layer4(x3)
+            x1 = self.layer1(x) # 56
+            x2 = self.layer2(x1) # 28
+            x3 = self.layer3(x2) # 14
+            x4 = self.layer4(x3) # 7
             #x = self.bn2(x4)
             #x = torch.flatten(x, 1)
             #x = self.dropout(x)

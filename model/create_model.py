@@ -16,6 +16,7 @@ from .TransFER import get_TransFER
 from .poster_models.posterv2 import PosterV2
 from .star_CAE import get_stars
 from .CAE import get_AC_CAE
+from .CrossStageCAE import get_Cross_Stage_CAE
 
 def create_model(args, config):
     model = None
@@ -80,6 +81,8 @@ def create_model(args, config):
     elif config.MODEL.ARCH in ['AC-CAE_single', 'Star-CAE_single', 'baseline_single', 'SingleStyle_multiCAE', 'SingleStyle_multiBaseline',
                               'CrossACCAE_single', 'CrossStarCAE_single']:
         model = get_AC_CAE(config)
+    elif config.MODEL.ARCH in ['CrossStageAC-CAE']:
+        model = get_Cross_Stage_CAE(config)
     else:
         raise Exception('Unknown model architecture')
         

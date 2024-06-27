@@ -8,7 +8,7 @@ SYSTEM:
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 64
+    BATCH_SIZE: 200
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
     
