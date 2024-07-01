@@ -16,6 +16,7 @@ DATA:
     
 MODEL:
     ARCH: 'UCrossAC-CAE'
+    DEPTH: 12
     
     
 TRAIN:

@@ -109,8 +109,8 @@ class UBlock(nn.Module):
                       act_layer=act_layer,
                       norm_layer=norm_layer,
                       block=block)
-        #self.expand_s = PatchExpand(input_resolution=fig_size[2], dim=dims[2], dim_scale=2)
-        #self.expand_m = PatchExpand(input_resolution=fig_size[1], dim=dims[1], dim_scale=2) 
+        self.expand_s = PatchExpand(input_resolution=fig_size[2], dim=dims[2], dim_scale=2)
+        self.expand_m = PatchExpand(input_resolution=fig_size[1], dim=dims[1], dim_scale=2) 
         self.proj_s = nn.Sequential(*[norm_layer(dims[2]), act_layer(), nn.Linear(dims[2], dims[1])])
         self.proj_m = nn.Sequential(*[norm_layer(dims[1]), act_layer(), nn.Linear(dims[1], dims[0])])
         
@@ -122,14 +122,18 @@ class UBlock(nn.Module):
         x_m = self.block_m(x_m)
         x_l = self.block_l(x_l)
 
+        '''
         # upscale x_s, consists of two branch: lm and ir
-        cls_m = [m[:, 0:1, ...] + self.proj_s(s[:, 0:1, ...]) for m, s in zip(x_m, x_s)]
-        x_m = [torch.cat((cls, m[:, 1:, ...]), dim=1) for cls, m in zip(cls_m, x_m)]
-        #x_m = [m + self.expand_s(s) for m, s in zip(x_m, x_s)]
+        #cls_m = [m[:, 0:1, ...] + self.proj_s(s[:, 0:1, ...]) for m, s in zip(x_m, x_s)]
+        cls_m = [m[:, 0:1, ...] for m in x_m]
+        patch_m = [m[:, 1:, ...] + self.expand_s(s[:, 1:, ...]) for m, s in zip(x_m, x_s)]
+        x_m = [torch.cat((cls, m), dim=1) for cls, m in zip(cls_m, patch_m)]
         # upscale x_m
-        cls_l = [l[:, 0:1, ...] + self.proj_m(m[:, 0:1, ...]) for l, m in zip(x_l, x_m)]
-        x_l = [torch.cat((cls, l[:, 1:, ...]), dim=1) for cls, l in zip(cls_l, x_l)]
-        #x_l = [l + self.expand_m(m) for l, m in zip(x_l, x_m)]
+        #cls_l = [l[:, 0:1, ...] + self.proj_m(m[:, 0:1, ...]) for l, m in zip(x_l, x_m)]
+        cls_l = [l[:, 0:1, ...] for l in x_l]
+        patch_l = [l[:, 1:, ...] + self.expand_m(m[:, 1:,...]) for l, m in zip(x_l, x_m)]
+        x_l = [torch.cat((cls, l), dim=1) for cls, l in zip(cls_l, patch_l)]
+        '''
         x = [x_l, x_m, x_s]
         return x
         
