@@ -17,6 +17,7 @@ from .poster_models.posterv2 import PosterV2
 from .star_CAE import get_stars
 from .CAE import get_AC_CAE
 from .CrossStageCAE import get_Cross_Stage_CAE
+from .UCAE import get_UCrossCAE
 
 def create_model(args, config):
     model = None
@@ -83,6 +84,8 @@ def create_model(args, config):
         model = get_AC_CAE(config)
     elif config.MODEL.ARCH in ['CrossStageAC-CAE']:
         model = get_Cross_Stage_CAE(config)
+    elif config.MODEL.ARCH in ['UCrossAC-CAE']:
+        model = get_UCrossCAE(config)
     else:
         raise Exception('Unknown model architecture')
         

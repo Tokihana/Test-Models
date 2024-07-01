@@ -157,7 +157,7 @@ class CrossStageBlock(nn.Module):
                 block: nn.Module=CAEBlock,):
         super().__init__()
         self.downsample = PatchMerging(dim=dim, out_dim=out_dim, norm_layer=norm_layer) if downsample else nn.Identity()
-        self.proj_cls_token = nn.Linear(dim, out_dim) if downsample else nn.Identity()
+        self.proj_cls_token = nn.Sequential(*[norm_layer(dims[1]), act_layer(), nn.Linear(dims, out_dim)]) if downsample else nn.Identity()
         blk_dim = out_dim if downsample else dim
         
         self.blocks = nn.Sequential(*[
@@ -207,7 +207,7 @@ class CrossStageModel(nn.Module):
                 img_size: int=112,
                 embed_len: int=784,
                 embed_dim: int=[128, 256, 512],
-                depthes: List[int]=[2, 18, 2],
+                depthes: List[int]=[3, 7, 6],
                 num_heads: List[int]=[4, 8, 16],
                 mlp_ratio: float=4.,
                 qkv_bias=False,

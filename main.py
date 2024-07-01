@@ -264,8 +264,8 @@ def validate(config, model, data_loader, criterion, logger):
                 f'Mem {memory_used:.0f}MB')
     
     if config.TRAIN.CONFUSION_MATRIX:
-        print(confusion_matrix.int().tolist())
-        wandb.Table(data=confusion_matrix.int().tolist())
+        logger.info(f'\n{confusion_matrix.int()}')
+        #wandb.Table(data=confusion_matrix.int().tolist())
         
     logger.info(f' * Acc {acc_avg.avg:.3f}')
     return acc_avg.avg,  loss_avg.avg

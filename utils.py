@@ -171,6 +171,13 @@ def tSNE(config, model, data_loader):
         # contains a SEhead model with a linear head
         B, C = len(data_loader.dataset), model.head.linear.in_features
         model.head.linear = torch.nn.Identity()
+    elif config.MODEL.ARCH in ['CrossACCAE_single']:
+        '''
+        heads in CrossCAE is a ModuleList contains a reduction linear
+        '''
+        B, C = len(data_loader.dataset), model.heads[0].linear.in_features
+        for head in model.heads:
+            head.linear = torch.nn.Identity()
     print(f'Examples: {B},\t out channels: {C}')
     
     
@@ -203,7 +210,7 @@ def tSNE(config, model, data_loader):
     )
     
     plt.figure()
-    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes, s=1)
+    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes, s=1/144)
     handles, _ = scatter.legend_elements(prop='colors')
     if config.DATA.DATASET == 'CK+':
         labels = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'netural', 'sadness', 'surprise']
@@ -273,11 +280,17 @@ def GradCAM(config, model, img_path):
     from PIL import Image
     import torch
     from torchvision.transforms import v2
+    import matplotlib.pyplot as plt
     
     if '14x14' in config.MODEL.ARCH:
-        target_layers = [model.head]
+        target_layers = [model.blocks[-1].norm1]
+        cam = GradCAM(model=model, target_layers=target_layers, reshape_transform=reshape_transform)
     elif config.MODEL.ARCH in ['AC-CAE_single', 'baseline_single']:
-        target_layers = [model.head.linear]
+        target_layers = [model.blocks[-1].norm1]
+        cam = GradCAM(model=model, target_layers=target_layers, reshape_transform=reshape_transform)
+    elif config.MODEL.ARCH in ['CrossACCAE_single']:
+        target_layers = [model.blocks[-1].norm1]
+        cam = GradCAM(model=model, target_layers=target_layers, reshape_transform=reshape_transform)
     
     
     img = Image.open('./test.jpg')
@@ -295,3 +308,22 @@ def GradCAM(config, model, img_path):
     input_tensor = model_transform(img)
     input_tensor = input_tensor.unsqueeze(0)# Create an input tensor image for your model..
     rgb_img = visual_transform(img).permute(1, 2, 0).numpy()
+
+    grayscale_cam = cam(input_tensor=input_tensor)
+    grayscale_cam = grayscale_cam[0, :]
+    print(rgb_img.shape, grayscale_cam.shape)
+    visualization = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+
+    plt.imsave(os.path.join(config.SYSTEM.EXPERIMENT_PATH, f'{config.DATA.DATASET}_{config.MODEL.ARCH}_GradCAM.png'), visualization)
+    plt.imshow(visualization)
+
+@ torch.no_grad()
+def reshape_transform(tensor, height=14, width=14):
+    print(tensor.shape)
+    result = tensor[:, 1 :  , :].reshape(tensor.size(0),
+        height, width, tensor.size(2))
+
+    # Bring the channels to the first dimension,
+    # like in CNNs.
+    result = result.transpose(2, 3).transpose(1, 2)
+    return result

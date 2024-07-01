@@ -2,9 +2,9 @@
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'running_tests'
-    EXPERIMENT_PATH: '../autodl-tmp/results/SingleStyle_multiCAE'
+    EXPERIMENT_PATH: '../autodl-tmp/results/CrossStageAC-CAE'
     SAVE_FREQ: 100
-    PRINT_FREQ: 30
+    PRINT_FREQ: 200
     
 DATA:
     IMG_SIZE: 112
@@ -12,15 +12,16 @@ DATA:
     VAL_BATCH_SIZE: 16
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
-    
+  
     
 MODEL:
-    ARCH: 'CrossStageAC-CAE'
+    ARCH: 'UCrossAC-CAE'
     
     
 TRAIN:
     EPOCHS: 20
     BASE_LR: 1e-4
+    CONFUSION_MATRIX: True
     
     OPTIMIZER:
         NAME: 'Adam'
