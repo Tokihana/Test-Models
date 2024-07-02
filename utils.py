@@ -129,7 +129,7 @@ def compute_flop_params(config, model, logger):
     flops, params = profile(model, inputs=(img.cuda(),))
     #flops, params = profile(model, inputs=(img,))
     flops, params = clever_format([flops, params], '%.3f')
-    logger.info(f'number of parms: {params}\t FLOPs:{flops}')
+    logger.info(f'Arch: {config.MODEL.ARCH}, number of parms: {params}\t FLOPs:{flops}')
     del img
     return params, flops
     
@@ -210,7 +210,7 @@ def tSNE(config, model, data_loader):
     )
     
     plt.figure()
-    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes, s=1/144)
+    scatter = plt.scatter(low_dim[:,0], low_dim[:,1], c=classes, s=1/72)
     handles, _ = scatter.legend_elements(prop='colors')
     if config.DATA.DATASET == 'CK+':
         labels = ['anger', 'contempt', 'disgust', 'fear', 'happy', 'netural', 'sadness', 'surprise']

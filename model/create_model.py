@@ -84,7 +84,7 @@ def create_model(args, config):
         model = get_AC_CAE(config)
     elif config.MODEL.ARCH in ['CrossStageAC-CAE']:
         model = get_Cross_Stage_CAE(config)
-    elif config.MODEL.ARCH in ['UCrossAC-CAE']:
+    elif config.MODEL.ARCH in ['UCrossAC-CAE', 'UCrossViT']:
         model = get_UCrossCAE(config)
     else:
         raise Exception('Unknown model architecture')

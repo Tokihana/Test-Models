@@ -6,33 +6,7 @@ from .raf_db_loader import RAF_DB_Loader
 from .window_blocks import window, WindowAttentionGlobal, CrossAttention
 from .vit_model import VisionTransformer, PatchEmbed
 from timm.models.layers import DropPath
-from ..CAE import CAEBlock
-
-class ClassificationHead(nn.Module):
-    def __init__(self, input_dim: int, target_dim: int):
-        super().__init__()
-        self.linear = torch.nn.Linear(input_dim, target_dim)
-
-    def forward(self, x):
-        x = x.view(x.size(0), -1)
-        y_hat = self.linear(x)
-        return y_hat
-
-class SE_block(nn.Module):
-    def __init__(self, input_dim: int):
-        super().__init__()
-        self.linear1 = torch.nn.Linear(input_dim, input_dim)
-        self.relu = nn.ReLU()
-        self.linear2 = torch.nn.Linear(input_dim, input_dim)
-        self.sigmod = nn.Sigmoid()
-
-    def forward(self, x):
-        x1 = self.linear1(x)
-        x1 = self.relu(x1)
-        x1 = self.linear2(x1)
-        x1 = self.sigmod(x1)
-        x = x * x1
-        return x
+from .CAE import CAEBlock
 
 def window_reverse(windows, window_size, H, W, h_w, w_w):
     """
@@ -120,18 +94,11 @@ class PosterV2(nn.Module):
         self.embed_k = nn.Sequential(nn.Conv2d(dims[1], 768, kernel_size=3, stride=2, padding=1))
         self.embed_v = PatchEmbed(img_size=14, patch_size=14, in_c=256, embed_dim=768)
         #self.VIT = VisionTransformer(depth=2, embed_dim=768)
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, 768))
-        self.pos_embed = nn.Parameter(torch.zeros(1, 148, 768))
         self.VIT = nn.Sequential(*[
             CAEBlock(dim=768, 
                     num_heads=8,)
-            for i in range(8)
+            for i in range(4)
         ])
-        self.head = nn.Sequential(*[
-            SE_block(input_dim=768),
-            ClassificationHead(input_dim=768, target_dim=7)
-        ])
-            
         
     def forward(self, x):
         lms, irs = self.feature_extractor(x)
@@ -146,18 +113,13 @@ class PosterV2(nn.Module):
         outs = [_to_channel_first(o) for o in ffn_outs]
         o1, o2, o3 = self.embed_q(outs[0]).flatten(2).transpose(1, 2), self.embed_k(outs[1]).flatten(2).transpose(1, 2), self.embed_v(outs[2])
         o = torch.cat([o1, o2, o3], dim=1)
-        cls_token = self.cls_token.expand(o.size(0), -1, -1)
-        o = torch.cat((cls_token, o), dim=1)
-        o = o + self.pos_embed
         out = self.VIT(o)
-        out = self.head(out[:, 0, ...])
-        '''
+        
         print("landmark shapes: " + str([lm.shape for lm in lms]))
         print("image feature shapes: " + str([ir.shape for ir in irs]))
         
         print("q_global shapes: " + str([q.shape for q in qs]))
         print("window shapes" + str([window.shape for window in x_windows]))
-        '''
         
         return out
     
@@ -203,8 +165,6 @@ class PosterV2_Cross(nn.Module):
         o1, o2, o3 = self.embed_q(outs[0]).flatten(2).transpose(1, 2), self.embed_k(outs[1]).flatten(2).transpose(1, 2), self.embed_v(outs[2])
         o = torch.cat([o1, o2, o3], dim=1)
         out = self.VIT(o)
-
-        
         
         '''
         print("landmark shapes: " + str([lm.shape for lm in lms]))

@@ -6,6 +6,7 @@ from typing import Optional, List, Callable
 import torch
 import torch.nn as nn
 from einops import rearrange
+from timm.models.vision_transformer import Block as ViTBlock
 # local
 from .CAE import Feature_Extractor, Linear_Mlp, CAEBlock, CrossCAEBlock, SEhead
 
@@ -29,6 +30,53 @@ IR50/MobileFaceNet              TransFormers
 ### ----------------------
 # Utils
 ### ----------------------
+class Feature_Extractor(nn.Module):
+    '''
+    extract ir and lm features
+    '''
+    def __init__(self, ir_path = '', lm_path = ''):
+        super().__init__()
+        # ir backbone
+        self.irback = iresnet50(num_features=7)
+        if not ir_path == '':
+            checkpoint = torch.load(ir_path)
+            miss, unexcepted = self.irback.load_state_dict(checkpoint, strict=False)
+            print(f'load IR50 check from {ir_path},\n Miss: {miss},\t Unexcept: {unexcepted}')
+            del checkpoint, miss, unexcepted
+        # lm backbone
+        self.lmback = MobileFaceNet([112, 112], 136)
+        if not lm_path == '':
+            checkpoint = torch.load(lm_path, map_location=lambda storage, loc: storage)
+            miss, unexcepted = self.lmback.load_state_dict(checkpoint['state_dict'], strict=False)
+            print(f'load MobileFaceNet check from {lm_path},\n Miss: {miss},\t Unexcept: {unexcepted}')
+            del checkpoint, miss, unexcepted
+
+        # lm projections
+        dim1, dim2 = [64, 128], [128, 256]
+        self.proj1 = nn.Sequential(*[
+            nn.Conv2d(in_channels=dim1[0], out_channels=dim1[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.Conv2d(in_channels=dim1[1], out_channels=dim1[1], kernel_size=3, padding=1, stride=1, groups=dim1[1]), # depth-wise
+            nn.Conv2d(in_channels=dim1[1], out_channels=dim1[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.BatchNorm2d(dim1[1])
+        ])
+        self.proj2 = nn.Sequential(*[
+            nn.Conv2d(in_channels=dim2[0], out_channels=dim2[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.Conv2d(in_channels=dim2[1], out_channels=dim2[1], kernel_size=3, padding=1, stride=1, groups=dim2[1]), # depth-wise
+            nn.Conv2d(in_channels=dim2[1], out_channels=dim2[1], kernel_size=1, padding=0, stride=1), # point-wise
+            nn.BatchNorm2d(dim2[1])
+        ])
+
+    def forward(self, x):
+        x_ir = self.irback(x)
+        x_lm = self.lmback(x)
+        # project x_lm
+        x1, x2, x3 = x_lm
+        x1 = self.proj1(x1)
+        x2 = self.proj2(x2)
+        x_lm = [x1, x2, x3]
+
+        return x_ir, x_lm
+
 class PatchExpand(nn.Module):
     def __init__(self, input_resolution, dim, dim_scale=2, norm_layer=nn.LayerNorm):
         super().__init__()
@@ -51,6 +99,32 @@ class PatchExpand(nn.Module):
         x = x.view(B,-1,C//4)
         x = self.norm(x)
 
+        return x
+
+class ClassificationHead(nn.Module):
+    def __init__(self, input_dim: int, target_dim: int):
+        super().__init__()
+        self.linear = torch.nn.Linear(input_dim, target_dim)
+
+    def forward(self, x):
+        x = x.view(x.size(0), -1)
+        y_hat = self.linear(x)
+        return y_hat
+
+class SE_block(nn.Module):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        self.linear1 = torch.nn.Linear(input_dim, input_dim)
+        self.relu = nn.ReLU()
+        self.linear2 = torch.nn.Linear(input_dim, input_dim)
+        self.sigmod = nn.Sigmoid()
+
+    def forward(self, x):
+        x1 = self.linear1(x)
+        x1 = self.relu(x1)
+        x1 = self.linear2(x1)
+        x1 = self.sigmod(x1)
+        x = x * x1
         return x
 
 ### -----------------------
@@ -183,7 +257,7 @@ class UCrossModel(nn.Module):
                             act_layer=act_layer,
                             norm_layer=norm_layer,
                             mlp_layer=mlp_layer,
-                            block=CAEBlock,
+                            block=block,
                             ) for i in range(depth)])
 
         self.norms = nn.ModuleList([nn.ModuleList([norm_layer(dim) for i in range(2)]) for dim in embed_dim])
@@ -212,12 +286,64 @@ class UCrossModel(nn.Module):
         out = torch.mean(torch.stack(out, dim=0), dim=0)
         return out.squeeze()
 
+
+class SingleUCrossModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.feature_extractor = Feature_Extractor(
+            ir_path = './model/pretrain/ir50_backbone.pth',
+            lm_path = './model/pretrain/mobilefacenet_model_best.pth.tar'
+        )
+
+        self.cross_supervise = nn.ModuleList([
+            block()
+            for i in range(3)
+        ])
+
+        self.blocks = nn.Sequential(*[
+            block()
+            for i in range(depth)
+        ])
+
+        self.norm = norm_layer(dim)
+        self.head = nn.Sequential(*[
+            SE_block(input_dim=512),
+            ClassificationHead(input_dim=512, target_dim=7)
+        ])
+            
+        
+        
+    def forward_features(self, x):
+        x_irs, x_lms = self.feature_extractor(x)
+        x = [x_ir * x_lm for x_ir, x_lm in zip(x_irs, x_lms)]
+
+        ir_embed = [x.flatten(2).transpose(-2, -1) for x in x_irs]
+        lm_embed = [x.flatten(2).transpose(-2, -1) for x in x_lms]
+        x_irs = [torch.cat((cls.expand(x.shape[0], -1, -1), x), dim=1) for cls, x in zip(self.cls_token_ir, ir_embed)]
+        x_lms = [torch.cat((cls.expand(x.shape[0], -1, -1), x), dim=1) for cls, x in zip(self.cls_token_lm, lm_embed)]
+        x_irs = [x + pos for x, pos in zip(x_irs, self.pos_embed)]
+
+        
+        return x
+        
+    def forward_head(self, x):
+        x = self.head(x)
+        return out
+
+    def forward(self, x):
+        x = self.forward_features(x)
+        x = self.forward_head(x)
+        return x
+
 ### ---------------------------------------------
 # create_model
 ### ---------------------------------------------
 def get_UCrossCAE(config):
     if config.MODEL.ARCH == 'UCrossAC-CAE':
         return _get_UCrossCAE(config, block=CAEBlock)
+
+    if config.MODEL.ARCH == 'UCrossViT':
+        return _get_UCrossCAE(config, block=ViTBlock)
     
 def _get_UCrossCAE(config, block):
     model = UCrossModel(img_size=config.DATA.IMG_SIZE,
@@ -233,6 +359,7 @@ def _get_UCrossCAE(config, block):
                         depth=config.MODEL.DEPTH,
                         block=block)
     return model
+
 
 ### --------------------------
 # Unit Tests
@@ -250,6 +377,16 @@ class UtilTests(unittest.TestCase):
         out = model(x[:, 1:, ...])
         print(out.shape)
         self.assertEqual(out.shape, torch.Size([B, (H*W*4), C//2]))
+        
+    def test_ClassifierHead(self):
+        B, N, C, num_c = 5, 50, 512, 7
+        head = nn.Sequential(*[
+            SE_block(input_dim=512),
+            ClassificationHead(input_dim=512, target_dim=7)
+        ])
+        x = torch.rand((B, C))
+        out = head(x)
+        print(out.shape)
 
 class BlockTests(unittest.TestCase):
     def test_UBlock(self):
@@ -275,6 +412,14 @@ class ModelTests(unittest.TestCase):
         num_class = 7
         imgs = torch.rand((B, C, H, W))
         model = UCrossModel(num_classes=num_class)
+        out = model(imgs)
+        print(out.shape)
+
+    def test_UModel_with_ViTBlock(self):
+        B, C, H, W = 5, 3, 112, 112
+        num_class = 7
+        imgs = torch.rand((B, C, H, W))
+        model = UCrossModel(num_classes=num_class, block=ViTBlock)
         out = model(imgs)
         print(out.shape)
                 

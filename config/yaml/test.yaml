@@ -2,21 +2,20 @@
 SYSTEM:
     PROJECT_NAME: 'CLSFERBaseline'
     EXPERIMENT_NAME: 'running_tests'
-    EXPERIMENT_PATH: '../autodl-tmp/results/CrossStageAC-CAE'
+    EXPERIMENT_PATH: '../autodl-tmp/results/UCrossAC-CAE'
     SAVE_FREQ: 100
     PRINT_FREQ: 200
     
 DATA:
     IMG_SIZE: 112
-    BATCH_SIZE: 16
-    VAL_BATCH_SIZE: 16
+    BATCH_SIZE: 32
+    VAL_BATCH_SIZE: 32
     DATASET: 'RAF-DB'
     DATA_PATH: '../FERdatasets/RAF-DB'
-  
     
 MODEL:
-    ARCH: 'UCrossAC-CAE'
-    DEPTH: 12
+    ARCH: 'POSTER2'
+    DEPTH: 8
     
     
 TRAIN:

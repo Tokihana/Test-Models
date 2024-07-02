@@ -422,7 +422,8 @@ class CrossCAEBlock(nn.Module):
                 block: nn.Module=CAEBlock, 
                 ):
         super().__init__()
-        self.block_ir = block(dim=dim, 
+        if block == CAEBlock:
+            self.block_ir = block(dim=dim, 
                       num_heads=num_heads, 
                       mlp_ratio=mlp_ratio,
                       qkv_bias=qkv_bias,
@@ -434,7 +435,7 @@ class CrossCAEBlock(nn.Module):
                       act_layer=act_layer,
                       norm_layer=norm_layer,
                       mlp_layer=mlp_layer,)
-        self.block_lm = block(dim=dim, 
+            self.block_lm = block(dim=dim, 
                       num_heads=num_heads, 
                       mlp_ratio=mlp_ratio,
                       qkv_bias=qkv_bias,
@@ -446,6 +447,31 @@ class CrossCAEBlock(nn.Module):
                       act_layer=act_layer,
                       norm_layer=norm_layer,
                       mlp_layer=mlp_layer,)
+        elif block == ViTBlock:
+            self.block_ir = block(dim=dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=drop_path,
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,)
+            self.block_lm = block(dim=dim, 
+                      num_heads=num_heads, 
+                      mlp_ratio=mlp_ratio,
+                      qkv_bias=qkv_bias,
+                      qk_norm=qk_norm,
+                      init_values=init_values,
+                      attn_drop=attn_drop,
+                      proj_drop=proj_drop,
+                      drop_path=drop_path,
+                      act_layer=act_layer,
+                      norm_layer=norm_layer,)
+        else:
+            assert f"non support block {block}"
 
     def forward(self, xs):
         '''
