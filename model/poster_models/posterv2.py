@@ -100,8 +100,20 @@ class FFN(nn.Module):
         return x       
     
 class PosterV2(nn.Module):
-    def __init__(self, dims=[64, 128, 256], window_sizes=[28, 14, 7], num_heads=[2, 4, 8]):
+    def __init__(self, dims=[64, 128, 256], window_sizes=[28, 14, 7], num_heads=[2, 4, 8], 
+                depth: int=2,
+                attn_drop: int=0.,
+                 proj_drop: int=0.,
+                 drop_path: int=0.,
+                 mlp_ratio: int=4.0,
+                 qkv_bias: bool=True,
+                 qk_norm: bool=True,
+                dim: int=768,
+                embed_len: int=147,
+                num_classes: int=7,
+                is_CAE: bool=True):
         super().__init__()
+        self.is_CAE = is_CAE
         self.feature_scales = len(dims)
         self.N = [w * w for w in window_sizes]
         self.dims = dims
@@ -119,18 +131,30 @@ class PosterV2(nn.Module):
                              nn.Conv2d(768, 768, kernel_size=3, stride=2, padding=1))
         self.embed_k = nn.Sequential(nn.Conv2d(dims[1], 768, kernel_size=3, stride=2, padding=1))
         self.embed_v = PatchEmbed(img_size=14, patch_size=14, in_c=256, embed_dim=768)
-        #self.VIT = VisionTransformer(depth=2, embed_dim=768)
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, 768))
-        self.pos_embed = nn.Parameter(torch.zeros(1, 148, 768))
-        self.VIT = nn.Sequential(*[
-            CAEBlock(dim=768, 
-                    num_heads=8,)
-            for i in range(8)
-        ])
-        self.head = nn.Sequential(*[
-            SE_block(input_dim=768),
-            ClassificationHead(input_dim=768, target_dim=7)
-        ])
+        
+        if not self.is_CAE:
+            self.VIT = VisionTransformer(depth=depth, embed_dim=dim, in_c=embed_len, num_classes=num_classes,
+                                        attn_drop_ratio=attn_drop, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, 
+                                        qk_scale=qk_norm, drop_ratio=proj_drop, drop_path_ratio=drop_path)
+        else: # using CAE blocks
+            self.cls_token = nn.Parameter(torch.zeros(1, 1, dim))
+            self.pos_embed = nn.Parameter(torch.zeros(1, embed_len+1, dim))
+            dp = [x.item() for x in torch.linspace(0, drop_path, depth)]
+            self.VIT = nn.Sequential(*[
+                CAEBlock(dim=dim, 
+                        num_heads=num_heads[-1],
+                        attn_drop=attn_drop,
+                        drop_path=dp[i],
+                        proj_drop=proj_drop,
+                        qkv_bias=qkv_bias,
+                        qk_norm=qk_norm,
+                        mlp_ratio=mlp_ratio)
+                for i in range(depth)
+            ])
+            self.head = nn.Sequential(*[
+                SE_block(input_dim=dim),
+                ClassificationHead(input_dim=dim, target_dim=num_classes)
+            ])
             
         
     def forward(self, x):
@@ -146,11 +170,15 @@ class PosterV2(nn.Module):
         outs = [_to_channel_first(o) for o in ffn_outs]
         o1, o2, o3 = self.embed_q(outs[0]).flatten(2).transpose(1, 2), self.embed_k(outs[1]).flatten(2).transpose(1, 2), self.embed_v(outs[2])
         o = torch.cat([o1, o2, o3], dim=1)
-        cls_token = self.cls_token.expand(o.size(0), -1, -1)
-        o = torch.cat((cls_token, o), dim=1)
-        o = o + self.pos_embed
-        out = self.VIT(o)
-        out = self.head(out[:, 0, ...])
+        
+        if self.is_CAE:
+            cls_token = self.cls_token.expand(o.size(0), -1, -1)
+            o = torch.cat((cls_token, o), dim=1)
+            o = o + self.pos_embed
+            out = self.VIT(o)
+            out = self.head(out[:, 0, ...])
+        else:
+            out = self.VIT(o)
         '''
         print("landmark shapes: " + str([lm.shape for lm in lms]))
         print("image feature shapes: " + str([ir.shape for ir in irs]))
@@ -237,3 +265,29 @@ class FFN_Cross(nn.Module):
         x = shortcut + self.drop_path(self.gamma1 * x) # first res 
         x = x + self.drop_path(self.gamma2 * self.mlp(self.norm(x))) # second res
         return x
+
+### ---------------
+# create func
+### ---------------
+def get_POSTER_CAE(config):
+    if config.MODEL.ARCH == 'POSTER_V2':
+        return PosterV2(is_CAE=False,
+                       num_classes=config.MODEL.NUM_CLASS,
+                       depth=config.MODEL.DEPTH,
+                       mlp_ratio=config.MODEL.MLP_RATIO,
+                       attn_drop=config.MODEL.ATTN_DROP,
+                       proj_drop=config.MODEL.PROJ_DROP,
+                       drop_path=config.MODEL.DROP_PATH,
+                       qkv_bias=config.MODEL.QKV_BIAS,
+                       qk_norm=config.MODEL.QK_NORM,)
+    if config.MODEL.ARCH == 'POSTER_CAE':
+        return PosterV2(is_CAE=True,
+                       num_classes=config.MODEL.NUM_CLASS,
+                       depth=config.MODEL.DEPTH,
+                       mlp_ratio=config.MODEL.MLP_RATIO,
+                       attn_drop=config.MODEL.ATTN_DROP,
+                       proj_drop=config.MODEL.PROJ_DROP,
+                       drop_path=config.MODEL.DROP_PATH,
+                       qkv_bias=config.MODEL.QKV_BIAS,
+                       qk_norm=config.MODEL.QK_NORM,)
+

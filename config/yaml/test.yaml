@@ -14,8 +14,8 @@ DATA:
     DATA_PATH: '../FERdatasets/RAF-DB'
     
 MODEL:
-    ARCH: 'POSTER2'
-    DEPTH: 8
+    ARCH: 'POSTER_V2'
+    DEPTH: 2
     
     
 TRAIN:

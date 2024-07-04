@@ -13,7 +13,7 @@ from .cross_cls_fusion import get_CrossCLSFER, get_CrossAddpatches
 from .cls_with_14 import get_14x14_model
 from .cls_with_28 import get_28x28_model
 from .TransFER import get_TransFER
-from .poster_models.posterv2 import PosterV2
+from .poster_models.posterv2 import get_POSTER_CAE
 from .star_CAE import get_stars
 from .CAE import get_AC_CAE
 from .CrossStageCAE import get_Cross_Stage_CAE
@@ -75,8 +75,8 @@ def create_model(args, config):
         model = timm.create_model('mvitv2_base.fb_in1k')
     elif 'TransFER' in config.MODEL.ARCH:
         model = get_TransFER(config)
-    elif config.MODEL.ARCH == 'POSTER2':
-        model = PosterV2()
+    elif config.MODEL.ARCH in ['POSTER_V2', 'POSTER_CAE']:
+        model = get_POSTER_CAE(config)
     elif 'star' in config.MODEL.ARCH: # 'starCAE-single'
         model = get_stars(config)
     elif config.MODEL.ARCH in ['AC-CAE_single', 'Star-CAE_single', 'baseline_single', 'SingleStyle_multiCAE', 'SingleStyle_multiBaseline',
