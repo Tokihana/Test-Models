@@ -262,11 +262,13 @@ class CLSAttention(nn.Module):
                 qk_norm: bool=False,
                 attn_drop: float=0.,
                 proj_drop: float=0.,
+                drop_key_ratio=0.,
                 norm_layer: nn.Module=nn.LayerNorm,):
         super(CLSAttention, self).__init__()
         self.num_heads = num_heads
         head_dim: int = dim // num_heads
         self.scale: float = head_dim ** -0.5
+        self.drop_key_ratio = drop_key_ratio
         
         self.wq, self.wk, self.wv = nn.Linear(dim, dim, bias=qkv_bias), nn.Linear(dim, dim, bias=qkv_bias), nn.Linear(dim, dim, bias=qkv_bias)
         self.q_norm = norm_layer(head_dim) if qk_norm else nn.Identity()
@@ -289,6 +291,9 @@ class CLSAttention(nn.Module):
         
         # attn: BH1(C/H) @ BH(C/H)N -> BH1N
         attn = q @ k.transpose(-2, -1) * self.scale
+        if self.drop_key_ratio > 0.:
+            m_r = torch.ones_like(attn) * self.drop_key_ratio
+            attn = attn + torch.bernoulli(m_r) * -1e12
         attn = attn.softmax(dim=-1) # dim that will compute softmax, every slice along this dim will sum to 1, for attn case, is N
         attn = self.attn_drop(attn)
         

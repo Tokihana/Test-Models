@@ -102,12 +102,13 @@ class FFN(nn.Module):
 class PosterV2(nn.Module):
     def __init__(self, dims=[64, 128, 256], window_sizes=[28, 14, 7], num_heads=[2, 4, 8], 
                 depth: int=2,
-                attn_drop: int=0.,
-                 proj_drop: int=0.,
-                 drop_path: int=0.,
-                 mlp_ratio: int=4.0,
+                attn_drop: float=0.,
+                 proj_drop: float=0.,
+                 drop_path: float=0.,
+                 mlp_ratio: float=4.,
                  qkv_bias: bool=True,
                  qk_norm: bool=True,
+                 drop_key: float=0.,
                 dim: int=768,
                 embed_len: int=147,
                 num_classes: int=7,
@@ -123,9 +124,9 @@ class PosterV2(nn.Module):
         # Global lm attention
         self.feature_extractor = Feature_Extractor()
         self.windows = nn.ModuleList([window(window_sizes[i], dims[i]) for i in range(self.feature_scales)])
-        self.attns = nn.ModuleList([WindowAttentionGlobal(dims[i], num_heads[i], window_sizes[i]) for i in range(self.feature_scales)])
+        self.attns = nn.ModuleList([WindowAttentionGlobal(dims[i], num_heads[i], window_sizes[i], attn_drop=attn_drop, proj_drop=proj_drop) for i in range(self.feature_scales)])
         dpr = [x.item() for x in torch.linspace(0, 0.5, 5)]
-        self.ffns = nn.ModuleList([FFN(dims[i], window_sizes[i], layer_scale=1e-5, drop_path=dpr[i]) for i in range(self.feature_scales)])
+        self.ffns = nn.ModuleList([FFN(dims[i], window_sizes[i], layer_scale=1e-5, drop=proj_drop, drop_path=dpr[i]) for i in range(self.feature_scales)])
         # ViT
         self.embed_q = nn.Sequential(nn.Conv2d(dims[0], 768, kernel_size=3, stride=2, padding=1),
                              nn.Conv2d(768, 768, kernel_size=3, stride=2, padding=1))

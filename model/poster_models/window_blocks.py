@@ -61,13 +61,15 @@ class WindowAttentionGlobal(nn.Module):
                  qkv_bias=True,
                  qk_sclae=None,
                  attn_drop=0.,
-                 proj_drop=0.
+                 proj_drop=0.,
+                 drop_key_ratio=0.,
                  ):
         super().__init__()
         self.window_size = (window_size, window_size)
         self.num_heads = num_heads
         head_dim = torch.div(dim, num_heads, rounding_mode = 'floor')
         self.scale = qk_sclae or head_dim ** -0.5 # \sqrt d by default
+        self.drop_key_ratio = drop_key_ratio
         
         # coordinates
         coords_h = torch.arange(self.window_size[0])
@@ -119,6 +121,9 @@ class WindowAttentionGlobal(nn.Module):
             self.window_size[0] * self.window_size[1], self.window_size[0] * self.window_size[1], -1)
         relative_position_bias = relative_position_bias.permute(2, 0, 1).contiguous()
         attn = attn + relative_position_bias.unsqueeze(0)
+        if self.drop_key_ratio > 0.:
+            m_r = torch.ones_like(attn) * self.drop_key_ratio
+            attn = attn + torch.bernoulli(m_r) * -1e12
         attn = self.softmax(attn)
         attn = self.attn_drop(attn)
         x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
